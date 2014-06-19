@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# tokenize_coptic.pl Version 1.0.0
+# tokenize_coptic.pl Version 1.1.1
 
 # this assumes a UTF-8 file with untokenized 'word forms'
 # separated by spaces
@@ -37,7 +37,7 @@ Examples:
 Tokenize a Coptic plain text file in UTF-8 encoding (without BOM):
   tokenize_coptic.pl in_Coptic_utf8.txt > out_Coptic_tokenized.txt
 
-Copyright 2013, Amir Zeldes
+Copyright 2013-2014, Amir Zeldes
 
 This program is free software. You may copy or redistribute it under
 the same terms as Perl itself.
@@ -61,14 +61,14 @@ if ($opts{n})   {$noword = 1;} else {$noword = 0;}
 ### BUILD LEXICON ###
 #build function word lists
 $pprep = "ⲁϫⲛⲧ|ⲉϩⲣⲁ|ⲉϩⲣⲁⲓⲉϫⲱ|ⲉϫⲛⲧⲉ|ⲉϫⲱ|ⲉⲣⲁⲧ|ⲉⲣⲁⲧⲟⲩ|ⲉⲣⲟ|ⲉⲣⲱ|ⲉⲧⲃⲏⲏⲧ|ⲉⲧⲟⲟⲧ|ϩⲁⲉⲓⲁⲧ|ϩⲁϩⲧⲏ|ϩⲁⲣⲁⲧ|ϩⲁⲣⲓϩⲁⲣⲟ|ϩⲁⲣⲟ|ϩⲁⲣⲱ|ϩⲁⲧⲟⲟⲧ|ϩⲓϫⲱ|ϩⲓⲣⲱ|ϩⲓⲧⲉ|ϩⲓⲧⲟⲟⲧ|ϩⲓⲧⲟⲩⲱ|ϩⲓⲱ|ϩⲓⲱⲱ|ⲕⲁⲧⲁⲣⲟ|ⲕⲁⲧⲁⲣⲱ|ⲙⲙⲟ|ⲙⲙⲱ|ⲙⲛⲛⲥⲱ|ⲙⲡⲁⲙⲧⲟⲉⲃⲟⲗ|ⲛⲏⲧⲛ|ⲛⲁ|ⲛϩⲏⲧ|ⲛⲙⲙⲏ|ⲛⲙⲙⲁ|ⲛⲥⲁⲃⲗⲗⲁ|ⲛⲥⲱ|ⲛⲧⲟⲟⲧ|ⲟⲩⲃⲏ|ϣⲁⲣⲟ|ϣⲁⲣⲱ|ⲛⲏ|ⲛⲛⲁϩⲣⲁ|ⲟⲩⲧⲱ|ⲛⲛⲁϩⲣⲏ|ϩⲁⲧⲏ|ⲉⲧⲃⲏⲏ|ⲛⲣⲁⲧ|ⲉⲣⲁ|ⲛⲁϩⲣⲁ|ⲛϩⲏ|ϩⲓⲧⲟⲟ|ⲕⲁⲧⲁ|ⲙⲉⲭⲣⲓ|ⲡⲁⲣⲁ|ⲉⲧⲃⲉ|ⲛⲧⲉ|ⲙⲛⲛⲥⲱ";
-$nprep = "ⲉ|ⲛ|ⲙ|ⲉⲧⲃⲉ|ϣⲁ|ⲛⲥⲁ|ⲕⲁⲧⲁ|ⲙⲛ|ϩⲓ|ⲛⲧⲉ|ϩⲁⲧⲛ|ϩⲓⲣⲙ|ϩⲓⲣⲛ";
+$nprep = "ⲉ|ⲛ|ⲙ|ⲉⲧⲃⲉ|ϣⲁ|ⲛⲥⲁ|ⲕⲁⲧⲁ|ⲙⲛ|ϩⲓ|ⲛⲧⲉ|ϩⲁⲧⲛ|ϩⲓⲣⲙ|ϩⲓⲣⲛ|ⲉⲣⲁⲧ";
 $indprep = "ⲉⲧⲃⲉ|ϩⲛ";
-$ppers = "ⲓ|ⲕ|ϥ|ⲥ|ⲛ|ⲧⲉⲧⲛ|ⲟ?ⲩ|(?<=ⲛ)ⲅ";
+$ppers = "ⲓ|ⲕ|ϥ|ⲥ|ⲛ|ⲧⲉⲧⲛ|(?<=ⲙⲡ|ϣⲁⲛⲧ)ⲉⲧⲛ|ⲟ?ⲩ|(?<=ⲛ)ⲅ";
 $ppero = "ⲓ|ⲕ|ϥ|ⲥ|ⲛ|ⲧⲛ|ⲧⲏⲩⲧⲛ|ⲟ?ⲩ";
 $art = "ⲡ|ⲡⲉ(?=(?:[^ⲁⲉⲓⲟⲩⲏⲱ][^ⲁⲉⲓⲟⲩⲏⲱ]|ⲯ|ⲭ|ⲑ|ⲫ|ⲝ|ϩⲟⲟⲩ|ⲟ?ⲩⲟⲉⲓϣ|ⲣⲟⲙⲡⲉ|ⲟ?ⲩϣⲏ|ⲟ?ⲩⲛⲟⲩ))|ⲛ|ⲛⲉ(?=(?:[^ⲁⲉⲓⲟⲩⲏⲱ][^ⲁⲉⲓⲟⲩⲏⲱ]|ⲯ|ⲭ|ⲑ|ⲫ|ⲝ|ϩⲟⲟⲩ|ⲟ?ⲩⲟⲉⲓϣ|ⲣⲟⲙⲡⲉ|ⲟ?ⲩϣⲏ|ⲟ?ⲩⲛⲟⲩ))|ⲧ|ⲧⲉ(?=(?:[^ⲁⲉⲓⲟⲩⲏⲱ][^ⲁⲉⲓⲟⲩⲏⲱ]|ⲯ|ⲭ|ⲑ|ⲫ|ⲝ|ϩⲟⲟⲩ|ⲟ?ⲩⲟⲉⲓϣ|ⲣⲟⲙⲡⲉ|ⲟ?ⲩϣⲏ|ⲟ?ⲩⲛⲟⲩ))|ⲟⲩ|ϩⲉⲛ|ⲡⲉⲓ|ⲧⲉⲓ|ⲛⲉⲓ|ⲕⲉ|ⲙ(?=ⲙ)";
 $ppos = "[ⲡⲧⲛ]ⲉ[ⲕϥⲥⲛⲩ]|[ⲡⲧⲛ]ⲉⲧⲛ|[ⲡⲧⲛ]ⲁ";
 $triprobase = "ⲁ|ⲙⲡ|ⲙⲡⲉ|ϣⲁ|ⲙⲉ|ⲙⲡⲁⲧ|ϣⲁⲛⲧⲉ?|ⲛⲧⲉⲣⲉ?|ⲛⲛⲉ|ⲛⲧⲉ|ⲛ|ⲧⲣⲉ|ⲧⲁⲣⲉ|ⲙⲁⲣⲉ|ⲙⲡⲣⲧⲣⲉ"; 
-$trinbase = "ⲁ|ⲙⲡⲉ|ϣⲁⲣⲉ|ⲙⲉⲣⲉ|ⲙⲡⲁⲧⲉ|ϣⲁⲛⲧⲉ|ⲛⲧⲉⲣⲉ|ⲛⲛⲉ|ⲛⲧⲉⲣⲉ|ⲛⲧⲉ|ⲧⲣⲉ|ⲧⲁⲣⲉ|ⲙⲁⲣⲉ|ⲙⲡⲣⲧⲣⲉ";
+$trinbase = "ⲁ|ⲙⲡⲉ|ϣⲁⲣⲉ|ⲙⲉⲣⲉ|ⲙⲡⲁⲧⲉ|ϣⲁⲛⲧⲉ|ⲛⲧⲉⲣⲉ|ⲛⲛⲉ|ⲛⲧⲉⲣⲉ|ⲛⲧⲉ|ⲧⲣⲉ|ⲧⲁⲣⲉ|ⲙⲁⲣⲉ|ⲙⲡⲣⲧⲣⲉ|ⲉⲣϣⲁⲛ";
 $bibase = "ϯ|ⲧⲉ|ⲕ|ϥ|ⲥ|ⲧⲛ|ⲧⲉⲧⲛ|ⲥⲉ";
 $exist = "ⲟⲩⲛ|ⲙⲛ";
 
@@ -137,6 +137,11 @@ while (<FILE>) {
 		print "$word\n"; #XML tag
 	}
 	elsif ($word eq ""){}
+	#elsif ($word =~ /.*\|.*/){
+	#manual tokenization found
+	#$dipl = $word;
+		#$word =~ s/(̈|%|̄|`|̅)//g; 
+#	}
 	else
 	{
 		
@@ -146,8 +151,9 @@ while (<FILE>) {
 		#remove supralinear strokes and other decorations for tokenization
 		if ($word =~ /\|/) #pipes found, assume explicit tokenization is present
 		{
-			#@toks = split(/\|/, $word);
-
+		
+		@toks = split(/\|/, $word);
+		$dipl =~ s/\|//g;
 		}
 		else #try to tokenize based on grammar patterns
 		{
@@ -190,6 +196,12 @@ while (<FILE>) {
 			
 			#check stoplist
 			if (exists $stoplist{$word}) {$word = $word;} 
+
+			#adhoc segmentations
+			elsif ($word =~ /^ⲛⲁⲩ$/){$word = "ⲛⲁ|ⲩ";} #free standing nau is a PP not a V
+			elsif ($word =~ /^ⲛⲁϣ$/){$word = "ⲛ|ⲁϣ";} #"in which (way)"
+			elsif ($word =~ /^ⲉⲓⲣⲉ$/){$word = "ⲉⲓⲣⲉ";} #free standing eire is not e|i|re
+			elsif ($word =~ /^ⲉϫⲓ$/){$word = "ⲉ|ϫⲓ";} 
 			
 			#adverbs
 			elsif ($word =~ /^($advlist)$/){$word = $1;}
@@ -221,8 +233,6 @@ while (<FILE>) {
 			elsif ($word =~ /^($trinbase)($art|$ppos)($nounlist)($verblist)($ppero)$/)  {$word = $1 . "|" . $2 . "|" . $3 . "|" . $4 ."|" . $5;}
 			elsif ($word =~ /^($trinbase)($art|$ppos)($nounlist)($verblist)($nounlist)$/)  {$word = $1 . "|" . $2 . "|" . $3 . "|" . $4 ."|" . $5;}
 
-			#simple NP
-			elsif ($word =~ /^($art|$ppos)($nounlist)$/) {$word = $1 . "|" . $2 ;}
 			#elsif ($word =~ /^($art|$ppos)($namelist)$/) {$word = $1 . "|" . $2 ;} #experimental, allow names with article
 			#relative generic NP p-et-o, ... 
 			elsif ($word =~ /^(ⲉⲧ)($verblist|$vstatlist|$advlist)$/) {$word = $1 . "|" . $2 ;}
@@ -269,6 +279,9 @@ while (<FILE>) {
 			elsif ($word =~ /^(ⲉⲧ?|ⲛⲉ)($exist)($nounlist)(ⲛⲁ)($verblist)$/) {$word = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5;}
 			elsif ($word =~ /^(ⲉⲧ?|ⲛⲉ)($exist)($nounlist)(ⲛⲁ)($verblist)($ppero)$/) {$word = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5. "|".$6;}
 
+			#simple NP - moved from before "relative generic NP p-et-o, ... " to account for preterite ne|u-sotm instead of possessive *neu-sotm with nominalized verb
+			#if this causes trouble consider splitting ART and PPOS cases of simple NP
+			elsif ($word =~ /^($art|$ppos)($nounlist)$/) {$word = $1 . "|" . $2 ;}
 
 			#nominal separated future verb or independent/to-infinitive
 			elsif($word =~ /^($verblist)($ppero)$/){$word = $1 . "|" . $2;}
@@ -299,8 +312,8 @@ while (<FILE>) {
 			elsif ($word =~ /^(ⲛⲉ|ⲉ)((?:ⲟⲩⲛⲧ|ⲙⲛⲧ)[ⲁⲉⲏ]?)($ppers)($nounlist)$/) {$word = $1 . "|" . $2 . "|" . $3."|".$4;}
 			elsif ($word =~ /^(ⲛⲉ|ⲉ)((?:ⲟⲩⲛⲧ|ⲙⲛⲧ)[ⲁⲉⲏ]?)($ppers)$/) {$word = $1 . "|" . $2 . "|" . $3 ;}
 
-			#optative
-			elsif ($word =~ /^(ⲉ)($ppers)(ⲉ)($verblist)$/) {$word = $1 . "|" . $2 . "|" . $3 . "|" . $4;}
+			#optative/conditional, make ppers a portmanteau segment with base
+			elsif ($word =~ /^(ⲉ)($ppers)(ⲉ|ϣⲁⲛ)($verblist)$/) {$word = $1 . $2 . $3 . "|" . $4;}
 			
 			#converter+prep
 			elsif ($word =~ /^(ⲉⲧ)($indprep)$/) {$word = $1 . "|" . $2;}
@@ -317,10 +330,13 @@ while (<FILE>) {
 		#split off negating TMs
 		if ($word=~/\|ⲧⲙ(?!ⲁⲉⲓⲏⲩ|ⲁⲓⲏⲩ|ⲁⲓⲟ|ⲁⲓⲟⲕ|ⲙⲟ|ⲟ$)/) {$word =~ s/\|ⲧⲙ/|ⲧⲙ|/;}
 		
+		
 		@toks = split(/\|/, $word);
 		
 		#print word and tokens
 		#$dipl =~ s/\|//g;
+}
+
 
 		if ($noword==0)
 		{
@@ -352,7 +368,7 @@ while (<FILE>) {
 		}
 			print "</word>\n";
 		
-	}
+	
 	}
 }
 
