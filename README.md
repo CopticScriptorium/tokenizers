@@ -15,8 +15,31 @@ nqi
 p
 hllo
 
-In order to retain the original word form border, the script optionally outputs the word
-as well in a separate column at the beginning of each separate word form.
+In order to retain the original word form border, the script optionally outputs the whole word
+as well in an SGML tag aruond each group of tokens.
+
+
+
+Usage:  tokenize_coptic_openXML.pl [options] <FILE>
+
+Options and argument:
+
+-h              print this [h]elp message and quit
+-p              output [p]ipe separated word forms instead of unanalyzed words in SGML elements
+-n              [n]o output of word forms in SGML elements before the set of tokens extracted from each word
+
+<FILE>    A text file encoded in UTF-8 without BOM, one word per line
+
+
+Examples:
+
+Tokenize a Coptic plain text file in UTF-8 encoding (without BOM):
+  tokenize_coptic.pl in_Coptic_utf8.txt > out_Coptic_tokenized.txt
+
+Copyright 2013, Amir Zeldes
+
+This program is free software. You may copy or redistribute it under
+the same terms as Perl itself.
 
 This script relies on a lexicon derived from materials kindly provided by Prof. Tito Orlandi
 of the CMCL project. Please cite CMCL whenever using this script for your publications.
