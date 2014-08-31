@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# tokenize_coptic.pl Version 1.1.1
+# tokenize_coptic.pl Version 2.0.0
 
 # this assumes a UTF-8 file with untokenized 'word forms'
 # separated by spaces
@@ -10,6 +10,7 @@
 
 use Getopt::Std;
 use utf8;
+
 binmode(STDOUT, ":utf8");
 binmode(STDIN, ":utf8");
 
@@ -21,13 +22,13 @@ This script converts characters from one Coptic encoding to another.
 Notes and assumptions:
 - ...
 
-Usage:  tokenize_coptic_openXML.pl [options] <FILE>
+Usage:  tokenize_coptic.pl [options] <FILE>
 
 Options and argument:
 
 -h              print this [h]elp message and quit
--p              output [p]ipe separated word forms instead of unanalyzed words in SGML elements
--n              [n]o output of word forms in SGML elements before the set of tokens extracted from each word
+-p              output [p]ipe separated word forms instead of tokens in separate lines wrapped by <tok> tags
+-n              [n]o output of word forms in <word> elements before the set of tokens extracted from each word
 
 <FILE>    A text file encoded in UTF-8 without BOM, one word per line
 
@@ -53,7 +54,7 @@ if ($opts{h} || (@ARGV == 0)) {
     print $usage;
     exit;
 }
-if ($opts{p})   {$pipes = 0;} else {$pipes = 1;}
+if ($opts{p})   {$pipes = 1;} else {$pipes = 0;}
 if ($opts{n})   {$noword = 1;} else {$noword = 0;}
 
 ### OPTIONS END ###
@@ -61,11 +62,11 @@ if ($opts{n})   {$noword = 1;} else {$noword = 0;}
 ### BUILD LEXICON ###
 #build function word lists
 $pprep = "ⲁϫⲛⲧ|ⲉϩⲣⲁ|ⲉϩⲣⲁⲓⲉϫⲱ|ⲉϫⲛⲧⲉ|ⲉϫⲱ|ⲉⲣⲁⲧ|ⲉⲣⲁⲧⲟⲩ|ⲉⲣⲟ|ⲉⲣⲱ|ⲉⲧⲃⲏⲏⲧ|ⲉⲧⲟⲟⲧ|ϩⲁⲉⲓⲁⲧ|ϩⲁϩⲧⲏ|ϩⲁⲣⲁⲧ|ϩⲁⲣⲓϩⲁⲣⲟ|ϩⲁⲣⲟ|ϩⲁⲣⲱ|ϩⲁⲧⲟⲟⲧ|ϩⲓϫⲱ|ϩⲓⲣⲱ|ϩⲓⲧⲉ|ϩⲓⲧⲟⲟⲧ|ϩⲓⲧⲟⲩⲱ|ϩⲓⲱ|ϩⲓⲱⲱ|ⲕⲁⲧⲁⲣⲟ|ⲕⲁⲧⲁⲣⲱ|ⲙⲙⲟ|ⲙⲙⲱ|ⲙⲛⲛⲥⲱ|ⲙⲡⲁⲙⲧⲟⲉⲃⲟⲗ|ⲛⲏⲧⲛ|ⲛⲁ|ⲛϩⲏⲧ|ⲛⲙⲙⲏ|ⲛⲙⲙⲁ|ⲛⲥⲁⲃⲗⲗⲁ|ⲛⲥⲱ|ⲛⲧⲟⲟⲧ|ⲟⲩⲃⲏ|ϣⲁⲣⲟ|ϣⲁⲣⲱ|ⲛⲏ|ⲛⲛⲁϩⲣⲁ|ⲟⲩⲧⲱ|ⲛⲛⲁϩⲣⲏ|ϩⲁⲧⲏ|ⲉⲧⲃⲏⲏ|ⲛⲣⲁⲧ|ⲉⲣⲁ|ⲛⲁϩⲣⲁ|ⲛϩⲏ|ϩⲓⲧⲟⲟ|ⲕⲁⲧⲁ|ⲙⲉⲭⲣⲓ|ⲡⲁⲣⲁ|ⲉⲧⲃⲉ|ⲛⲧⲉ|ⲙⲛⲛⲥⲱ";
-$nprep = "ⲉ|ⲛ|ⲙ|ⲉⲧⲃⲉ|ϣⲁ|ⲛⲥⲁ|ⲕⲁⲧⲁ|ⲙⲛ|ϩⲓ|ⲛⲧⲉ|ϩⲁⲧⲛ|ϩⲓⲣⲙ|ϩⲓⲣⲛ|ⲉⲣⲁⲧ";
-$indprep = "ⲉⲧⲃⲉ|ϩⲛ";
-$ppers = "ⲓ|ⲕ|ϥ|ⲥ|ⲛ|ⲧⲉⲧⲛ|(?<=ⲙⲡ|ϣⲁⲛⲧ)ⲉⲧⲛ|ⲟ?ⲩ|(?<=ⲛ)ⲅ";
+$nprep = "ⲉ|ⲛ|ⲙ|ⲉⲧⲃⲉ|ϣⲁ|ⲛⲥⲁ|ⲕⲁⲧⲁ|ⲙⲛ|ϩⲓ|ⲛⲧⲉ|ϩⲁⲧⲛ|ϩⲁⲧⲙ|ϩⲓⲣⲙ|ϩⲓⲣⲛ|ⲉⲣⲁⲧ|ϩⲛ|ϩⲙ|ϩⲓⲧⲛ|ϩⲓⲧⲙ|ϩⲓϫⲛ|ϩⲓϫⲙ|ϩⲁ|ⲕⲁⲧⲁ|ⲙⲉⲭⲣⲓ|ⲡⲁⲣⲁ|ⲛⲁ|ⲛⲧⲉ";
+$indprep = "ⲉⲧⲃⲉ|ϩⲛ|ϩⲙ";
+$ppers = "ⲓ|ⲕ|ϥ|ⲥ|ⲛ|ⲧⲉⲧⲛ|(?<=ⲙⲡ)ⲉⲧⲛ|(?<=ϣⲁⲛⲧ)ⲉⲧⲛ|(?<=ⲧⲣⲉ)ⲧⲛ|ⲟ?ⲩ|(?<=ⲛ)ⲅ";
 $ppero = "ⲓ|ⲕ|ϥ|ⲥ|ⲛ|ⲧⲛ|ⲧⲏⲩⲧⲛ|ⲟ?ⲩ";
-$art = "ⲡ|ⲡⲉ(?=(?:[^ⲁⲉⲓⲟⲩⲏⲱ][^ⲁⲉⲓⲟⲩⲏⲱ]|ⲯ|ⲭ|ⲑ|ⲫ|ⲝ|ϩⲟⲟⲩ|ⲟ?ⲩⲟⲉⲓϣ|ⲣⲟⲙⲡⲉ|ⲟ?ⲩϣⲏ|ⲟ?ⲩⲛⲟⲩ))|ⲛ|ⲛⲉ(?=(?:[^ⲁⲉⲓⲟⲩⲏⲱ][^ⲁⲉⲓⲟⲩⲏⲱ]|ⲯ|ⲭ|ⲑ|ⲫ|ⲝ|ϩⲟⲟⲩ|ⲟ?ⲩⲟⲉⲓϣ|ⲣⲟⲙⲡⲉ|ⲟ?ⲩϣⲏ|ⲟ?ⲩⲛⲟⲩ))|ⲧ|ⲧⲉ(?=(?:[^ⲁⲉⲓⲟⲩⲏⲱ][^ⲁⲉⲓⲟⲩⲏⲱ]|ⲯ|ⲭ|ⲑ|ⲫ|ⲝ|ϩⲟⲟⲩ|ⲟ?ⲩⲟⲉⲓϣ|ⲣⲟⲙⲡⲉ|ⲟ?ⲩϣⲏ|ⲟ?ⲩⲛⲟⲩ))|ⲟⲩ|ϩⲉⲛ|ⲡⲉⲓ|ⲧⲉⲓ|ⲛⲉⲓ|ⲕⲉ|ⲙ(?=ⲙ)";
+$art = "ⲡ|ⲡⲉ(?=(?:[^ⲁⲉⲓⲟⲩⲏⲱ][^ⲁⲉⲓⲟⲩⲏⲱ]|ⲯ|ⲭ|ⲑ|ⲫ|ⲝ|ϩⲟⲟⲩ|ⲟ?ⲩⲟⲉⲓϣ|ⲣⲟⲙⲡⲉ|ⲟ?ⲩϣⲏ|ⲟ?ⲩⲛⲟⲩ))|ⲛ|ⲛⲉ(?=(?:[^ⲁⲉⲓⲟⲩⲏⲱ][^ⲁⲉⲓⲟⲩⲏⲱ]|ⲯ|ⲭ|ⲑ|ⲫ|ⲝ|ϩⲟⲟⲩ|ⲟ?ⲩⲟⲉⲓϣ|ⲣⲟⲙⲡⲉ|ⲟ?ⲩϣⲏ|ⲟ?ⲩⲛⲟⲩ))|ⲧ|ⲧⲉ(?=(?:[^ⲁⲉⲓⲟⲩⲏⲱ][^ⲁⲉⲓⲟⲩⲏⲱ]|ⲯ|ⲭ|ⲑ|ⲫ|ⲝ|ϩⲟⲟⲩ|ⲟ?ⲩⲟⲉⲓϣ|ⲣⲟⲙⲡⲉ|ⲟ?ⲩϣⲏ|ⲟ?ⲩⲛⲟⲩ))|ⲟⲩ|ϩⲉⲛ|ⲡⲉⲓ|ⲧⲉⲓ|ⲛⲉⲓ|ⲕⲉ|ⲙ(?=ⲙ)|ⲡⲓ|ⲛⲓ|ϯ";
 $ppos = "[ⲡⲧⲛ]ⲉ[ⲕϥⲥⲛⲩ]|[ⲡⲧⲛ]ⲉⲧⲛ|[ⲡⲧⲛ]ⲁ";
 $triprobase = "ⲁ|ⲙⲡ|ⲙⲡⲉ|ϣⲁ|ⲙⲉ|ⲙⲡⲁⲧ|ϣⲁⲛⲧⲉ?|ⲛⲧⲉⲣⲉ?|ⲛⲛⲉ|ⲛⲧⲉ|ⲛ|ⲧⲣⲉ|ⲧⲁⲣⲉ|ⲙⲁⲣⲉ|ⲙⲡⲣⲧⲣⲉ"; 
 $trinbase = "ⲁ|ⲙⲡⲉ|ϣⲁⲣⲉ|ⲙⲉⲣⲉ|ⲙⲡⲁⲧⲉ|ϣⲁⲛⲧⲉ|ⲛⲧⲉⲣⲉ|ⲛⲛⲉ|ⲛⲧⲉⲣⲉ|ⲛⲧⲉ|ⲧⲣⲉ|ⲧⲁⲣⲉ|ⲙⲁⲣⲉ|ⲙⲡⲣⲧⲣⲉ|ⲉⲣϣⲁⲛ";
@@ -91,10 +92,13 @@ while (<LEX>) {
 	}
 }
 
+#add ad hoc stoplist members
+$stoplist{'ϥⲓ'} = 'ϥⲓ;V';
+
 #add negated TM forms of verbs
 $tm = $verblist;
 $tm =~ s/\|/|ⲧⲙ/g;
-$verblist .=  "|$tm";
+$verblist .=  "$tm";
 
 $nounlist .="%%%";
 $verblist .="%%%";
@@ -108,58 +112,120 @@ $namelist .="%%%";
 #$namelist =~ s/(.)/$1(?:(?:<[^>]+>)+)?/g;
 
 open FILE,"<:encoding(UTF-8)",shift or die "could not find input document";
+$preFirstWord = 1;
+$strCurrentTokens = "";
 
 while (<FILE>) {
 
     chomp;
     $line = $_;
+	
+	$line = &preprocess($line);
+	$line =~ s/^\n+//;
+	$line =~ s/\n+$//;
 
-	#protect up to *4* spaces in XML tags
-	$line =~ s/(<[^>]+) ([^>]+) ([^>]+) ([^>]+) ([^>]+>)/$1\@$2\@$3\@$4\@$5/g; 
-	$line =~ s/(<[^>]+) ([^>]+) ([^>]+) ([^>]+>)/$1\@$2\@$3\@$4/g; 
-	$line =~ s/(<[^>]+) ([^>]+) ([^>]+>)/$1\@$2\@$3/g; 
-	$line =~ s/(<[^>]+) ([^>]+>)/$1\@$2/g; 
-	$line =~ s/</ </g; 
-	$line =~ s/>/> /g; 
-	$line =~ s/\./ ./g; 
-	$line =~ s/ +/ /g; 
-		
-	#$tagbuffer= "";
-	#$tagoutput="";
-	
-	@words = split(/ +/, $line);
-	foreach $word (@words)
-	
-	{
-	if ($word =~ /<.+>/)
-	{
-		$word =~ s/@/ /g;
-		print "$word\n"; #XML tag
-	}
-	elsif ($word eq ""){}
-	#elsif ($word =~ /.*\|.*/){
-	#manual tokenization found
-	#$dipl = $word;
-		#$word =~ s/(̈|%|̄|`|̅)//g; 
-#	}
-	else
-	{
-		
-		$dipl = $word;
-		$word =~ s/(̈|%|̄|`|̅)//g; 
-		
-		#remove supralinear strokes and other decorations for tokenization
-		if ($word =~ /\|/) #pipes found, assume explicit tokenization is present
+	@sublines = split("\n+",$line);
+	foreach $subline (@sublines)	{
+		if ($subline =~ /<word word=\"([^\"]+)\">/) {
+			#bound groups begins, tokenize full form from element attribute
+			if ($preFirstWord == 1)
+			{
+				print $strCurrentTokens;
+				$strCurrentTokens = "";
+				$preFirstWord=0;
+			}
+			$word = $1;
+			print $strCurrentTokens;
+			$strCurrentTokens = "";
+			$strTokenized = &tokenize($word);
+			if ($noword == 1) {$subline =~ s/\n*<word[^>]*>\n*//g; print $subline;
+			}
+			else{	print $subline ."\n";}
+			
+		}
+		elsif ($subline eq "</word>"){
+			#bound group ends, flush tags and output resegmented tokens
+				#search for morphemes to add
+
+			$strPattern = ($strTokenized);
+			@t = split(/\|/, $strTokenized);
+
+			$strPattern =~ s/([\[\]\(\)])/\\$1/g;
+			$strPattern =~ s/([^\\])/$1\#/g;
+			$strPattern =~ s/\|/\)\(/g;
+			$strPattern =~ s/#/(?:(?:[\\n̄︦︤︥̂`̣̇̂̅̈︤︥︦]|<[^>]+>)*)?/g; #allow intervening tags, linebreaks, and Coptic diacritics
+			$strPattern =~ s/(.*)/(?<!\\")\($1\)/; #negative lookbehind prevents matching tokens within a quoted attribute in an SGML tag
+			$count = () = $strTokenized =~ /\|/g; 
+			if ($strCurrentTokens =~ /$strPattern/){
+				if ($count==0) {$strCurrentTokens =~ s/$strPattern/<tok tok=\"$t[(1-1)]\">\n$1\n<\/tok>\n/;}
+				elsif ($count==1) {$strCurrentTokens =~ s/$strPattern/<tok tok=\"$t[0]\">\n$1\n<\/tok>\n<tok tok=\"$t[1]\">\n$2\n<\/tok>\n/;}
+				elsif ($count==2) {$strCurrentTokens =~ s/$strPattern/<tok tok=\"$t[(1-1)]\">\n$1\n<\/tok>\n<tok tok=\"$t[(2-1)]\">\n$2\n<\/tok>\n<tok tok=\"$t[(3-1)]\">\n$3\n<\/tok>\n/;}
+				elsif ($count==3) {$strCurrentTokens =~ s/$strPattern/<tok tok=\"$t[(1-1)]\">\n$1\n<\/tok>\n<tok tok=\"$t[(2-1)]\">\n$2\n<\/tok>\n<tok tok=\"$t[(3-1)]\">\n$3\n<\/tok>\n<tok tok=\"$t[(4-1)]\">\n$4\n<\/tok>\n/;}
+				elsif ($count==4) {$strCurrentTokens =~ s/$strPattern/<tok tok=\"$t[(1-1)]\">\n$1\n<\/tok>\n<tok tok=\"$t[(2-1)]\">\n$2\n<\/tok>\n<tok tok=\"$t[(3-1)]\">\n$3\n<\/tok>\n<tok tok=\"$t[(4-1)]\">\n$4\n<\/tok>\n<tok tok=\"$t[(5-1)]\">\n$5\n<\/tok>\n/;}
+				elsif ($count==5) {$strCurrentTokens =~ s/$strPattern/<tok tok=\"$t[(1-1)]\">\n$1\n<\/tok>\n<tok tok=\"$t[(2-1)]\">\n$2\n<\/tok>\n<tok tok=\"$t[(3-1)]\">\n$3\n<\/tok>\n<tok tok=\"$t[(4-1)]\">\n$4\n<\/tok>\n<tok tok=\"$t[(5-1)]\">\n$5\n<\/tok>\n<tok tok=\"$t[(6-1)]\">\n$6\n<\/tok>\n/;}
+				elsif ($count==6) {$strCurrentTokens =~ s/$strPattern/<tok tok=\"$t[(1-1)]\">\n$1\n<\/tok>\n<tok tok=\"$t[(2-1)]\">\n$2\n<\/tok>\n<tok tok=\"$t[(3-1)]\">\n$3\n<\/tok>\n<tok tok=\"$t[(4-1)]\">\n$4\n<\/tok>\n<tok tok=\"$t[(5-1)]\">\n$5\n<\/tok>\n<tok tok=\"$t[(6-1)]\">\n$6\n<\/tok>\n<tok tok=\"$t[(7-1)]\">\n$7\n<\/tok>\n/;}
+				elsif ($count==7) {$strCurrentTokens =~ s/$strPattern/<tok tok=\"$t[(1-1)]\">\n$1\n<\/tok>\n<tok tok=\"$t[(2-1)]\">\n$2\n<\/tok>\n<tok tok=\"$t[(3-1)]\">\n$3\n<\/tok>\n<tok tok=\"$t[(4-1)]\">\n$4\n<\/tok>\n<tok tok=\"$t[(5-1)]\">\n$5\n<\/tok>\n<tok tok=\"$t[(6-1)]\">\n$6\n<\/tok>\n<tok tok=\"$t[(7-1)]\">\n$7\n<\/tok>\n<tok tok=\"$t[(8-1)]\">\n$8\n<\/tok>\n/;}
+				elsif ($count==8) {$strCurrentTokens =~ s/$strPattern/<tok tok=\"$t[(1-1)]\">\n$1\n<\/tok>\n<tok tok=\"$t[(2-1)]\">\n$2\n<\/tok>\n<tok tok=\"$t[(3-1)]\">\n$3\n<\/tok>\n<tok tok=\"$t[(4-1)]\">\n$4\n<\/tok>\n<tok tok=\"$t[(5-1)]\">\n$5\n<\/tok>\n<tok tok=\"$t[(6-1)]\">\n$6\n<\/tok>\n<tok tok=\"$t[(7-1)]\">\n$7\n<\/tok>\n<tok tok=\"$t[(8-1)]\">\n$8\n<\/tok>\n<tok tok=\"$t[(9-1)]\">\n$9\n<\/tok>\n/;}
+			}
+			else { 
+				if  ($count==0) {
+					$strCurrentTokens =  "<tok warning=\"no pattern match for token\">\n" . $strCurrentTokens . "\n</tok>\n"; #no match for pattern
+				}
+				else {
+					$strTokenized =~ s/\|/\n<\/tok>\n<tok>\n/g;
+					$strCurrentTokens = "<tok>\n" . $strTokenized . "\n<\/tok>\n";
+				}
+			}
+			$strCurrentTokens =~ s/\n+/\n/g;
+			if ($pipes == 1)
+			{
+				$strCurrentTokens =~ s/\n<\/tok>\n<tok[^>]*>\n/|/g;
+				$strCurrentTokens =~ s/<\/?tok[^>]*>\n//g;
+			}
+			print $strCurrentTokens;
+			$strCurrentTokens = "";
+			if ($noword == 1) {$subline =~ s/\n*<\/?word[^>]*>\n*//g;}
+			print $subline ;
+		}
+		elsif ($subline =~ /<.*>/) {
+			#other SGML tag, just save it
+			$strCurrentTokens .= $subline ."\n";
+		}
+		else
 		{
+			#token
+			$strCurrentTokens .= $subline ."\n";		
+		}
+	}
+} 
+
+	sub tokenize{
+	$strWord = $_[0];
+	
+	
+	if ($strWord =~ /<.+>/)
+	{
+		$strWord =~ s/@/ /g;
+		print "$strWord\n"; #XML tag
+	}
+	elsif ($strWord eq ""){ #do nothing
+	}
+		else
+	{
 		
-		@toks = split(/\|/, $word);
-		$dipl =~ s/\|//g;
+		$dipl = $strWord;
+		$strWord =~ s/(̈|%|̄|`|̅|̈|̂|︤|︥|︦)//g; 
+
+		#remove supralinear strokes and other decorations for tokenization
+		if ($strWord =~ /\|/) #pipes found, assume explicit tokenization is present
+		{
+			$dipl =~ s/\|//g;
 		}
 		else #try to tokenize based on grammar patterns
 		{
 
 			#check for theta/phi containing an article
-			if($word =~ /^($nprep|$pprep)?(ⲑ|ⲫ)(.+)$/) 
+			if($strWord =~ /^($nprep|$pprep)?(ⲑ|ⲫ)(.+)$/) 
 			{
 				if (defined($1)){$opt_prep = $1;}else{$opt_prep="";}
 				$theta_phi = $2;
@@ -168,208 +234,216 @@ while (<FILE>) {
 				if ($noun_candidate =~ /^($nounlist|$namelist)$/) #experimentally allowing proper nouns with articles
 				{
 					if ($theta_phi eq "ⲑ") {$theta_phi = "ⲧ";} else {$theta_phi = "ⲡ";}
-					$word = $opt_prep . $theta_phi . $noun_candidate;
+					$strWord = $opt_prep . $theta_phi . $noun_candidate;
+				}
+			}
+			#check for theta containing a relative converter
+			
+			if($strWord =~ /^((?:(?:$nprep|$pprep)?$art)?ⲉⲑ)(.+)$/) 
+			{
+				$theta= $1;
+				$verb_candidate = $2;
+				$theta=~s/ⲑ$/ⲧ/;
+				$verb_candidate =  "ϩ" .  $verb_candidate;
+				if ($verb_candidate =~ /^($verblist|$vstatlist)$/) 
+				{
+					$strWord = $theta . $verb_candidate;
 				}
 			}
 
+
 			#check for fused t-i
-			if($word =~ /^(ϣⲁⲛ)ϯ(.*)/) 
+			if($strWord =~ /^(ϣⲁⲛ)ϯ(.*)/) 
 			{
 				$candidate = $1;
 				$candidate .=  "ⲧ";
 				if (defined($2)){$ending = $2;}else{$ending="";}
 				if ($candidate =~ /^($triprobase|$pprep)$/) 
 				{
-					$word = $candidate . "ⲓ". $ending;
+					$strWord = $candidate . "ⲓ". $ending;
 				}
 			}
-			elsif($word =~ /^(.*)ϯ(.+)$/) 
+			elsif($strWord =~ /^(.*)ϯ(.+)$/) 
 			{
 				$candidate = $2;
 				$candidate =  "ⲓ" . $candidate;
 				if (defined($1)){$start = $1;}else{$start="";}
 				if ($candidate =~ /^($nounlist|$namelist)$/) 
 				{
-					$word = $start . "ⲧ". $candidate;
+					$strWord = $start . "ⲧ". $candidate;
 				}
 			}
 			
 			#check stoplist
-			if (exists $stoplist{$word}) {$word = $word;} 
-
+			if (exists $stoplist{$strWord}) {$strWord = $strWord;} 
+		
 			#adhoc segmentations
-			elsif ($word =~ /^ⲛⲁⲩ$/){$word = "ⲛⲁ|ⲩ";} #free standing nau is a PP not a V
-			elsif ($word =~ /^ⲛⲁϣ$/){$word = "ⲛ|ⲁϣ";} #"in which (way)"
-			elsif ($word =~ /^ⲉⲓⲣⲉ$/){$word = "ⲉⲓⲣⲉ";} #free standing eire is not e|i|re
-			elsif ($word =~ /^ⲉϫⲓ$/){$word = "ⲉ|ϫⲓ";} 
+			elsif ($strWord =~ /^ⲛⲁⲩ$/){$strWord = "ⲛⲁ|ⲩ";} #free standing nau is a PP not a V
+			elsif ($strWord =~ /^ⲛⲁϣ$/){$strWord = "ⲛ|ⲁϣ";} #"in which (way)"
+			elsif ($strWord =~ /^ⲉⲓⲣⲉ$/){$strWord = "ⲉⲓⲣⲉ";} #free standing eire is not e|i|re
+			elsif ($strWord =~ /^ⲉϫⲓ$/){$strWord = "ⲉ|ϫⲓ";} 
+			elsif ($strWord =~ /^ⲛⲏⲧⲛ$/){$strWord = "ⲛⲏ|ⲧⲛ";} 
 			
 			#adverbs
-			elsif ($word =~ /^($advlist)$/){$word = $1;}
+			elsif ($strWord =~ /^($advlist)$/){$strWord = $1;}
 			
 			
 			#ⲧⲏⲣ=
-			elsif ($word =~ /^(ⲧⲏⲣ)($ppero)$/){$word = $1 ."|" . $2;}
+			elsif ($strWord =~ /^(ⲧⲏⲣ)($ppero)$/){$strWord = $1 ."|" . $2;}
 
 			#pure existential
-			elsif ($word =~ /^(ⲟⲩⲛ|ⲙⲛ)($nounlist)$/) {$word = $1 . "|" . $2 ;}
+			elsif ($strWord =~ /^(ⲟⲩⲛ|ⲙⲛ)($nounlist)$/) {$strWord = $1 . "|" . $2 ;}
 
 			#prepositions
-			elsif ($word =~ /^($pprep)($ppero)$/){$word = $1 . "|" . $2;}
-			elsif ($word =~ /^($nprep)($namelist)$/){$word = $1 . "|" . $2;}
-			elsif ($word =~ /^($nprep)($art|$ppos)($nounlist)$/) {$word = $1 . "|" . $2 . "|" . $3;} #experimentally allowing proper nouns with articles
-			#elsif ($word =~ /^($nprep)($art|$ppos)ⲉ($nounlist)$/) {$word = $1 . "|" . $2 . "|" . $3;}
+			elsif ($strWord =~ /^($pprep)($ppero)$/){$strWord = $1 . "|" . $2;}
+			elsif ($strWord =~ /^($nprep)($namelist)$/){$strWord = $1 . "|" . $2;}
+			elsif ($strWord =~ /^($nprep)($art|$ppos)($nounlist)$/) {$strWord = $1 . "|" . $2 . "|" . $3;} #experimentally allowing proper nouns with articles
+			#elsif ($strWord =~ /^($nprep)($art|$ppos)ⲉ($nounlist)$/) {$strWord = $1 . "|" . $2 . "|" . $3;}
 
 			#tripartite clause
 			#pronominal
-			elsif ($word =~ /^($triprobase)($ppers)($verblist)$/) {$word = $1 . "|" . $2 . "|" . $3;}
-			elsif ($word =~ /^($triprobase)($ppers)($verblist)($ppero)$/)  {$word = $1 . "|" . $2 . "|" . $3 . "|" . $4;}
-			elsif ($word =~ /^($triprobase)($ppers)($verblist)($nounlist)$/)  {$word = $1 . "|" . $2 . "|" . $3 . "|" . $4;}
+			elsif ($strWord =~ /^($triprobase)($ppers)($verblist)$/) {$strWord = $1 . "|" . $2 . "|" . $3;}
+			elsif ($strWord =~ /^($triprobase)($ppers)($verblist)($ppero)$/)  {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4;}
+			elsif ($strWord =~ /^($triprobase)($ppers)($verblist)($nounlist)$/)  {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4;}
 			#proper name subject
-			elsif ($word =~ /^($trinbase)($namelist)($verblist)$/)  {$word = $1 . "|" . $2 . "|" . $3;}
-			elsif ($word =~ /^($trinbase)($namelist)($verblist)($ppero)$/)  {$word = $1 . "|" . $2 . "|" . $3 . "|" . $4;}
-			elsif ($word =~ /^($trinbase)($namelist)($verblist)($nounlist)$/)  {$word = $1 . "|" . $2 . "|" . $3 . "|" . $4 ;}
+			elsif ($strWord =~ /^($trinbase)($namelist)($verblist)$/)  {$strWord = $1 . "|" . $2 . "|" . $3;}
+			elsif ($strWord =~ /^($trinbase)($namelist)($verblist)($ppero)$/)  {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4;}
+			elsif ($strWord =~ /^($trinbase)($namelist)($verblist)($nounlist)$/)  {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4 ;}
 			#prenominal
-			elsif ($word =~ /^($trinbase)($art|$ppos)($nounlist)($verblist)$/)  {$word = $1 . "|" . $2 . "|" . $3 . "|" . $4;}
-			elsif ($word =~ /^($trinbase)($art|$ppos)($nounlist)($verblist)($ppero)$/)  {$word = $1 . "|" . $2 . "|" . $3 . "|" . $4 ."|" . $5;}
-			elsif ($word =~ /^($trinbase)($art|$ppos)($nounlist)($verblist)($nounlist)$/)  {$word = $1 . "|" . $2 . "|" . $3 . "|" . $4 ."|" . $5;}
+			elsif ($strWord =~ /^($trinbase)($art|$ppos)($nounlist)($verblist)$/)  {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4;}
+			elsif ($strWord =~ /^($trinbase)($art|$ppos)($nounlist)($verblist)($ppero)$/)  {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4 ."|" . $5;}
+			elsif ($strWord =~ /^($trinbase)($art|$ppos)($nounlist)($verblist)($nounlist)$/)  {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4 ."|" . $5;}
 
-			#elsif ($word =~ /^($art|$ppos)($namelist)$/) {$word = $1 . "|" . $2 ;} #experimental, allow names with article
+			#elsif ($strWord =~ /^($art|$ppos)($namelist)$/) {$strWord = $1 . "|" . $2 ;} #experimental, allow names with article
 			#relative generic NP p-et-o, ... 
-			elsif ($word =~ /^(ⲉⲧ)($verblist|$vstatlist|$advlist)$/) {$word = $1 . "|" . $2 ;}
-			elsif ($word =~ /^($art)(ⲉⲧ)($verblist|$vstatlist|$advlist)$/) {$word = $1 . "|" . $2 . "|" . $3;}
-			elsif ($word =~ /^($art)(ⲉⲧ)($pprep)($ppero)$/) {$word = $1 . "|" . $2 . "|" . $3 . "|" . $4;}
-			elsif ($word =~ /^(ⲉⲧ)(ⲛⲁ)($verblist|$vstatlist|$advlist)$/) {$word = $1 . "|" . $2. "|" . $3 ;}
-			elsif ($word =~ /^($art)(ⲉⲧ)(ⲛⲁ)($verblist|$vstatlist|$advlist)$/) {$word = $1 . "|" . $2 . "|" . $3. "|" . $4;}
+			elsif ($strWord =~ /^(ⲉⲧ)($verblist|$vstatlist|$advlist)$/) {$strWord = $1 . "|" . $2 ;}
+			elsif ($strWord =~ /^($art)(ⲉⲧ)($verblist|$vstatlist|$advlist)$/) {$strWord = $1 . "|" . $2 . "|" . $3;}
+			elsif ($strWord =~ /^($art)(ⲉⲧ)($pprep)($ppero)$/) {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4;}
+			elsif ($strWord =~ /^(ⲉⲧ)(ⲛⲁ)($verblist|$vstatlist|$advlist)$/) {$strWord = $1 . "|" . $2. "|" . $3 ;}
+			elsif ($strWord =~ /^($art)(ⲉⲧ)(ⲛⲁ)($verblist|$vstatlist|$advlist)$/) {$strWord = $1 . "|" . $2 . "|" . $3. "|" . $4;}
+			#with nqi
+			elsif ($strWord =~ /^(ⲛϭⲓ)($art)(ⲉⲧ)($verblist|$vstatlist|$advlist)$/) {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4;}
+			elsif ($strWord =~ /^(ⲛϭⲓ)($art)(ⲉⲧ)($pprep)($ppero)$/) {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4 ."|" . $5;}
+			elsif ($strWord =~ /^(ⲛϭⲓ)($art)(ⲉⲧ)(ⲛⲁ)($verblist|$vstatlist|$advlist)$/) {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4 ."|" . $5;}
 			#presentative
-			elsif ($word =~ /^(ⲉⲓⲥ)($art|$ppos)($nounlist)$/) {$word = $1 . "|" . $2 . "|" . $3;}
+			elsif ($strWord =~ /^(ⲉⲓⲥ)($art|$ppos)($nounlist)$/) {$strWord = $1 . "|" . $2 . "|" . $3;}
 
 			#Verboids
 			#pronominal subject - peja=f, nanou=s
-			elsif ($word =~ /^($vbdlist)($ppero)$/) {$word = $1 . "|" . $2 ;}
+			elsif ($strWord =~ /^($vbdlist)($ppero)$/) {$strWord = $1 . "|" . $2 ;}
 			#nominal subject - peje-prwme
-			#elsif ($word =~ /^($vbdlist)($art|$ppos)($nounlist)$/) {$word = $1 . "|" . $2 . "|" . $3;}
+			#elsif ($strWord =~ /^($vbdlist)($art|$ppos)($nounlist)$/) {$strWord = $1 . "|" . $2 . "|" . $3;}
 			
 			#bipartite clause
 			#pronominal + future
-			elsif ($word =~ /^($bibase)($verblist|$vstatlist|$advlist)$/) {$word = $1 . "|" . $2;}
-			elsif ($word =~ /^($bibase)(ⲛⲁ)($verblist)$/) {$word = $1 . "|" . $2 . "|" . $3;}
-			elsif ($word =~ /^($bibase)(ⲛⲁ)($verblist)($ppero)$/) {$word = $1 . "|" . $2 . "|" . $3. "|".$4;}
-			elsif ($word =~ /^($bibase)(ⲛⲁ)($verblist)($art|$ppos)($nounlist)$/) {$word = $1 . "|" . $2 . "|" . $3. "|".$4 . "|" . $5;}
+			elsif ($strWord =~ /^($bibase)($verblist|$vstatlist|$advlist)$/) {$strWord = $1 . "|" . $2;}
+			elsif ($strWord =~ /^($bibase)(ⲛⲁ)($verblist)$/) {$strWord = $1 . "|" . $2 . "|" . $3;}
+			elsif ($strWord =~ /^($bibase)(ⲛⲁ)($verblist)($ppero)$/) {$strWord = $1 . "|" . $2 . "|" . $3. "|".$4;}
+			elsif ($strWord =~ /^($bibase)(ⲛⲁ)($verblist)($art|$ppos)($nounlist)$/) {$strWord = $1 . "|" . $2 . "|" . $3. "|".$4 . "|" . $5;}
 			#nominal + future (+object)
-			elsif ($word =~ /^($art|$ppos)($nounlist)($verblist|$vstatlist|$advlist)$/) {$word = $1 . "|" . $2 . "|" . $3;}
-			elsif ($word =~ /^($art|$ppos)($nounlist)(ⲛⲁ)($verblist)$/) {$word = $1 . "|" . $2 . "|" . $3 . "|" . $4;}
-			elsif ($word =~ /^($art|$ppos)($nounlist)(ⲛⲁ)($verblist)($ppero)$/) {$word = $1 . "|" . $2 . "|" . $3 . "|" . $4 . "|".$5;}
+			#elsif ($strWord =~ /^($art|$ppos)($nounlist)($verblist|$vstatlist|$advlist)$/) {$strWord = $1 . "|" . $2 . "|" . $3;}
+
+			elsif ($strWord =~ /^($art|$ppos)($nounlist)(ⲛⲁ)($verblist)$/) {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4;}
+			elsif ($strWord =~ /^($art|$ppos)($nounlist)(ⲛⲁ)($verblist)($ppero)$/) {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4 . "|".$5;}
 			#indefinite + future
-			elsif ($word =~ /^($exist)($nounlist)($verblist|$vstatlist|$advlist)$/) {$word = $1 . "|" . $2 . "|" . $3;}
-			elsif ($word =~ /^($exist)($nounlist)(ⲛⲁ)($verblist)$/) {$word = $1 . "|" . $2 . "|" . $3 . "|" . $4;}
-			elsif ($word =~ /^($exist)($nounlist)(ⲛⲁ)($verblist)($ppero)$/) {$word = $1 . "|" . $2 . "|" . $3 . "|" . $4."|".$5;}
+			elsif ($strWord =~ /^($exist)($nounlist)($verblist|$vstatlist|$advlist)$/) {$strWord = $1 . "|" . $2 . "|" . $3;}
+			elsif ($strWord =~ /^($exist)($nounlist)(ⲛⲁ)($verblist)$/) {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4;}
+			elsif ($strWord =~ /^($exist)($nounlist)(ⲛⲁ)($verblist)($ppero)$/) {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4."|".$5;}
 			
 			#converted bipartite clause
 			#pronominal + future
-			elsif ($word =~ /^(ⲉⲧ?|ⲛⲉ)($ppero)($verblist|$vstatlist|$advlist)$/) {$word = $1 . "|" . $2 . "|" . $3;}
-			elsif ($word =~ /^(ⲉⲧ?|ⲛⲉ)($ppero)($nprep)($art)($nounlist)$/) {$word = $1 . "|" . $2 . "|" . $3 . "|" . $4."|".$5;} #PP predicate
-			elsif ($word =~ /^(ⲉⲧ?|ⲛⲉ)($ppero)(ⲛⲁ)($verblist)$/) {$word = $1 . "|" . $2 . "|" . $3 . "|" . $4;}
-			elsif ($word =~ /^(ⲉⲧ?|ⲛⲉ)($ppero)(ⲛⲁ)($verblist)($ppero)$/) {$word = $1 . "|" . $2 . "|" . $3 . "|" . $4."|".$5;}
+			elsif ($strWord =~ /^(ⲉⲧ?|ⲛⲉ)($ppers)($verblist|$vstatlist|$advlist)$/) {$strWord = $1 . "|" . $2 . "|" . $3;}
+			elsif ($strWord =~ /^(ⲉⲧ?|ⲛⲉ)($ppers)($nprep)($art)($nounlist)$/) {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4."|".$5;} #PP predicate
+			elsif ($strWord =~ /^(ⲉⲧ?|ⲛⲉ)($ppers)(ⲛⲁ)($verblist)$/) {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4;}
+			elsif ($strWord =~ /^(ⲉⲧ?|ⲛⲉ)($ppers)(ⲛⲁ)($verblist)($ppero)$/) {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4."|".$5;}
 			#nominal
-			elsif ($word =~ /^(ⲉⲧ?|ⲛ?ⲉⲣⲉ)($art|$ppos)($nounlist)($verblist|$vstatlist|$advlist)$/) {$word = $1 . "|" . $2 . "|" . $3 . "|" . $4;}
-			elsif ($word =~ /^(ⲉⲧ?|ⲛ?ⲉⲣⲉ)($art|$ppos)($nounlist)(ⲛⲁ)($verblist)$/) {$word = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5;}
-			elsif ($word =~ /^(ⲉⲧ?|ⲛ?ⲉⲣⲉ)($art|$ppos)($nounlist)(ⲛⲁ)($verblist)($ppero)$/) {$word = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5."|".$6;}
+			elsif ($strWord =~ /^(ⲉⲧ?|ⲛ?ⲉⲣⲉ)($art|$ppos)($nounlist)($verblist|$vstatlist|$advlist)$/) {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4;}
+			elsif ($strWord =~ /^(ⲉⲧ?|ⲛ?ⲉⲣⲉ)($art|$ppos)($nounlist)(ⲛⲁ)($verblist)$/) {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5;}
+			elsif ($strWord =~ /^(ⲉⲧ?|ⲛ?ⲉⲣⲉ)($art|$ppos)($nounlist)(ⲛⲁ)($verblist)($ppero)$/) {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5."|".$6;}
 			#indefinite
-			elsif ($word =~ /^(ⲉⲧ?|ⲛⲉ)($exist)($nounlist)($verblist|$vstatlist|$advlist)$/) {$word = $1 . "|" . $2 . "|" . $3 . "|" . $4;}
-			elsif ($word =~ /^(ⲉⲧ?|ⲛⲉ)($exist)($nounlist)(ⲛⲁ)($verblist)$/) {$word = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5;}
-			elsif ($word =~ /^(ⲉⲧ?|ⲛⲉ)($exist)($nounlist)(ⲛⲁ)($verblist)($ppero)$/) {$word = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5. "|".$6;}
+			elsif ($strWord =~ /^(ⲉⲧ?|ⲛⲉ)($exist)($nounlist)($verblist|$vstatlist|$advlist)$/) {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4;}
+			elsif ($strWord =~ /^(ⲉⲧ?|ⲛⲉ)($exist)($nounlist)(ⲛⲁ)($verblist)$/) {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5;}
+			elsif ($strWord =~ /^(ⲉⲧ?|ⲛⲉ)($exist)($nounlist)(ⲛⲁ)($verblist)($ppero)$/) {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5. "|".$6;}
 
 			#simple NP - moved from before "relative generic NP p-et-o, ... " to account for preterite ne|u-sotm instead of possessive *neu-sotm with nominalized verb
 			#if this causes trouble consider splitting ART and PPOS cases of simple NP
-			elsif ($word =~ /^($art|$ppos)($nounlist)$/) {$word = $1 . "|" . $2 ;}
+			elsif ($strWord =~ /^(ⲛϭⲓ)($art|$ppos)($nounlist)$/) {$strWord = $1 . "|" . $2 . "|" . $3;}
+			elsif ($strWord =~ /^($art|$ppos)($nounlist)$/) {$strWord = $1 . "|" . $2 ;}
+			elsif ($strWord =~ /^(ⲛϭⲓ)($namelist)$/) {$strWord = $1 . "|" . $2 ;}
 
 			#nominal separated future verb or independent/to-infinitive
-			elsif($word =~ /^($verblist)($ppero)$/){$word = $1 . "|" . $2;}
-			elsif($word =~ /^(ⲛⲁ|ⲉ)($verblist)$/){$word = $1 . "|" . $2;}
-			elsif($word =~ /^(ⲛⲁ|ⲉ)($verblist)($ppero)$/){$word = $1 . "|" . $2 . "|" . $3;}
-			elsif($word =~ /^(ⲉ)(ⲧⲣⲉ)($ppers)($verblist)$/) {$word = $1 . "|" . $2 . "|" . $3 . "|" . $4;}
-			elsif($word =~ /^(ⲉ)(ⲧⲣⲉ)($ppers)($verblist)($ppero)$/){$word = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5;}
+			elsif($strWord =~ /^($verblist)($ppero)$/){$strWord = $1 . "|" . $2;}
+			elsif($strWord =~ /^(ⲛⲁ|ⲉ)($verblist)$/){$strWord = $1 . "|" . $2;}
+			elsif($strWord =~ /^(ⲛⲁ|ⲉ)($verblist)($ppero)$/){$strWord = $1 . "|" . $2 . "|" . $3;}
+			elsif($strWord =~ /^(ⲉ)(ⲧⲣⲉ)($ppers)($verblist)$/) {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4;}
+			elsif($strWord =~ /^(ⲉ)(ⲧⲣⲉ)($ppers)($verblist)($ppero)$/){$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5;}
+			elsif($strWord =~ /^(ⲉ)(ⲧⲙ)(ⲧⲣⲉ)($ppers)($verblist)$/) {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4 . "|" . $5;}
+			elsif($strWord =~ /^(ⲉ)(ⲧⲙ)(ⲧⲣⲉ)($ppers)($verblist)($ppero)$/){$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5 . "|" . $6;}
 
 			#converted tripartite clause
 			#pronominal
-			elsif ($word =~ /^(ⲛⲧ|ⲉ)(ⲁ)($ppers)($verblist)$/) {$word = $1 . "|" . $2 . "|" . $3 . "|" . $4;}
-			elsif ($word =~ /^(ⲛⲧ|ⲉ)(ⲁ)($ppers)($verblist)($ppero)$/)  {$word = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5;}
-			elsif ($word =~ /^(ⲛⲧ|ⲉ)(ⲁ)($ppers)($verblist)($nounlist)$/)  {$word = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5;}
-			elsif ($word =~ /^($art)(ⲉⲛⲧ)(ⲁ)($ppers)($verblist)$/) {$word = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5;} #nominalized
-			elsif ($word =~ /^($art)(ⲉⲛⲧ)(ⲁ)($ppers)($verblist)($ppero)$/) {$word = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5 . "|" . $6;} #nominalized
+			elsif ($strWord =~ /^(ⲉ?ⲛⲧ|ⲉ)(ⲁ)($ppers)($verblist)$/) {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4;}
+			elsif ($strWord =~ /^(ⲉ?ⲛⲧ|ⲉ)(ⲁ)($ppers)($verblist)($ppero)$/)  {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5;}
+			elsif ($strWord =~ /^(ⲉ?ⲛⲧ|ⲉ)(ⲁ)($ppers)($verblist)($nounlist)$/)  {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5;}
+			elsif ($strWord =~ /^($art)(ⲉⲛⲧ)(ⲁ)($ppers)($verblist)$/) {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5;} #nominalized
+			elsif ($strWord =~ /^($art)(ⲉⲛⲧ)(ⲁ)($ppers)($verblist)($ppero)$/) {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5 . "|" . $6;} #nominalized
 			###
 			#prenominal
-			elsif ($word =~ /^(ⲛⲧ|ⲉ)(ⲁ)($art|$ppos)($nounlist)$/)   {$word = $1 . "|" . $2 . "|" . $3 . "|" . $4;}
-			elsif ($word =~ /^(ⲛⲧ|ⲉ)(ⲁ)($art|$ppos)($nounlist)($verblist)$/)   {$word = $1 . "|" . $2 . "|" . $3 . "|" . $4 ."|" . $5;}
-			elsif ($word =~ /^(ⲛⲧ|ⲉ)(ⲁ)($art|$ppos)($nounlist)($verblist)($ppero)$/)  {$word = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5. "|".$6;}
-			elsif ($word =~ /^(ⲛⲧ|ⲉ)(ⲁ)($art|$ppos)($nounlist)($verblist)($nounlist)$/)  {$word = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5. "|".$6;}
-			elsif ($word =~ /^($art)(ⲉⲛⲧ)(ⲁ)($art|$ppos)($nounlist)$/) {$word = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5;}  #nominalized
-			elsif ($word =~ /^($art)(ⲉⲛⲧ)(ⲁ)($art|$ppos)($nounlist)($verblist)$/) {$word = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5. "|" . $6;}  #nominalized
+			elsif ($strWord =~ /^(ⲉ?ⲛⲧ|ⲉ)(ⲁ)($art|$ppos)($nounlist)$/)   {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4;}
+			elsif ($strWord =~ /^(ⲉ?ⲛⲧ|ⲉ)(ⲁ)($art|$ppos)($nounlist)($verblist)$/)   {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4 ."|" . $5;}
+			elsif ($strWord =~ /^(ⲉ?ⲛⲧ|ⲉ)(ⲁ)($art|$ppos)($nounlist)($verblist)($ppero)$/)  {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5. "|".$6;}
+			elsif ($strWord =~ /^(ⲉ?ⲛⲧ|ⲉ)(ⲁ)($art|$ppos)($nounlist)($verblist)($nounlist)$/)  {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5. "|".$6;}
+			elsif ($strWord =~ /^($art)(ⲉⲛⲧ)(ⲁ)($art|$ppos)($nounlist)$/) {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5;}  #nominalized
+			elsif ($strWord =~ /^($art)(ⲉⲛⲧ)(ⲁ)($art|$ppos)($nounlist)($verblist)$/) {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5. "|" . $6;}  #nominalized
 
 			#possessives
-			elsif ($word =~ /^((?:ⲟⲩⲛⲧ|ⲙⲛⲧ)[ⲁⲉⲏ]?)($ppers)($nounlist)$/) {$word = $1 . "|" . $2 . "|" . $3;}
-			elsif ($word =~ /^((?:ⲟⲩⲛⲧ|ⲙⲛⲧ)[ⲁⲉⲏ]?)($ppers)$/) {$word = $1 . "|" . $2 ;}
-			elsif ($word =~ /^(ⲛⲉ|ⲉ)((?:ⲟⲩⲛⲧ|ⲙⲛⲧ)[ⲁⲉⲏ]?)($ppers)($nounlist)$/) {$word = $1 . "|" . $2 . "|" . $3."|".$4;}
-			elsif ($word =~ /^(ⲛⲉ|ⲉ)((?:ⲟⲩⲛⲧ|ⲙⲛⲧ)[ⲁⲉⲏ]?)($ppers)$/) {$word = $1 . "|" . $2 . "|" . $3 ;}
+			elsif ($strWord =~ /^((?:ⲟⲩⲛⲧ|ⲙⲛⲧ)[ⲁⲉⲏ]?)($ppers)($nounlist)$/) {$strWord = $1 . "|" . $2 . "|" . $3;}
+			elsif ($strWord =~ /^((?:ⲟⲩⲛⲧ|ⲙⲛⲧ)[ⲁⲉⲏ]?)($ppers)$/) {$strWord = $1 . "|" . $2 ;}
+			elsif ($strWord =~ /^(ⲛⲉ|ⲉ)((?:ⲟⲩⲛⲧ|ⲙⲛⲧ)[ⲁⲉⲏ]?)($ppers)($nounlist)$/) {$strWord = $1 . "|" . $2 . "|" . $3."|".$4;}
+			elsif ($strWord =~ /^(ⲛⲉ|ⲉ)((?:ⲟⲩⲛⲧ|ⲙⲛⲧ)[ⲁⲉⲏ]?)($ppers)$/) {$strWord = $1 . "|" . $2 . "|" . $3 ;}
 
 			#optative/conditional, make ppers a portmanteau segment with base
-			elsif ($word =~ /^(ⲉ)($ppers)(ⲉ|ϣⲁⲛ)($verblist)$/) {$word = $1 . $2 . $3 . "|" . $4;}
+			elsif ($strWord =~ /^(ⲉ)($ppers)(ⲉ|ϣⲁⲛ)($verblist)$/) {$strWord = $1 . $2 . $3 . "|" . $4;}
 			
 			#converter+prep
-			elsif ($word =~ /^(ⲉⲧ)($indprep)$/) {$word = $1 . "|" . $2;}
+			elsif ($strWord =~ /^(ⲉⲧ)($indprep)$/) {$strWord = $1 . "|" . $2;}
 
 			#negative imperative
-			elsif ($word =~ /^(ⲙⲡⲣ)($verblist)$/) {$word = $1 . "|" . $2;}
+			elsif ($strWord =~ /^(ⲙⲡⲣ)($verblist)$/) {$strWord = $1 . "|" . $2;}
 
 			#else {			
 			#nothing found
-			#}
-		
-		
+			#}	
 
 		#split off negating TMs
-		if ($word=~/\|ⲧⲙ(?!ⲁⲉⲓⲏⲩ|ⲁⲓⲏⲩ|ⲁⲓⲟ|ⲁⲓⲟⲕ|ⲙⲟ|ⲟ$)/) {$word =~ s/\|ⲧⲙ/|ⲧⲙ|/;}
-		
-		
-		@toks = split(/\|/, $word);
-		
-		#print word and tokens
-		#$dipl =~ s/\|//g;
-}
-
-
-		if ($noword==0)
-		{
-			print "<word word=\"";
-				if ($pipes ==0) {print $word;}else{print $dipl;}	
-				print "\">\n";
-		}
-
-		
-		foreach $tok (@toks)
-		{
-			#restore protected spaces in XML elements
-			$tok =~ s/\@/ /g; 
-			if ($tok =~ /(.*)(<.*>)$/) #final tag, belongs to next token
-			{
-			$tok = $1;
-			#$tagbuffer= $2;
-			}
-			else{
-			$tok =~ s/<(.*)>(.+)/%<$1>$2/g;
-			}
-			@subtoks = split(/%/, $tok);
-			foreach $subtok (@subtoks)
-			{
-				$subtok =~ s/(<.*>)(.*)/$2\t$1/g;
-				print $subtok;
-				print "\n";
-			}
-		}
-			print "</word>\n";
-		
-	
+		if ($strWord=~/\|ⲧⲙ(?!ⲁⲉⲓⲏⲩ|ⲁⲓⲏⲩ|ⲁⲓⲟ|ⲁⲓⲟⲕ|ⲙⲟ|ⲟ$)/) {$strWord =~ s/\|ⲧⲙ/|ⲧⲙ|/;}
+				
+		$strWord;
 	}
-}
 
 }
+}
+
+sub preprocess{
+
+	$rawline = $_[0];
+	$rawline =~ s/([^< ]+) (?=[^<>]*>)/$1%/g;
+	$rawline =~ s/(^| )([^ ]+)(?= |$)/$1 . '<word%word="' . &removexml($2) . '">' . $2 . "<\/word>"/eg;
+	$rawline =~ s/>/>\n/g;
+	$rawline =~ s/</\n</g;
+	$rawline =~ s/\n+/\n/g;
+	$rawline =~ s/^\n//;
+	$rawline =~ s/\n$//;
+	$rawline =~ s/%/ /g;
+	$rawline;
+	
+}
+
+sub removexml{
+	$input = $_[0];
+	$input =~ s/<[^<>]+>//g;
+	$input;
+}
+
+
+
