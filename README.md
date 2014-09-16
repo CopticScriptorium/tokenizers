@@ -16,17 +16,18 @@ p
 hllo
 
 In order to retain the original word form border, the script optionally outputs the whole word
-as well in an SGML tag aruond each group of tokens.
+as well in an SGML tag aruond each group of tokens. The script ignores inline SGML tags,
+so you can tokenize files that already include tags, even within words. It is therefore possible
+to tokenize the UTF-8 equivalent of <hi rend="big">t</hi>eishime ('this woman' with an annotated
+initial tao). 
 
-
-
-Usage:  tokenize_coptic_openXML.pl [options] <FILE>
+Usage:  tokenize_coptic.pl [options] <FILE>
 
 Options and argument:
 
 -h              print this [h]elp message and quit
--p              output [p]ipe separated word forms instead of unanalyzed words in SGML elements
--n              [n]o output of word forms in SGML elements before the set of tokens extracted from each word
+-p              output [p]ipe separated word forms instead of tokens in separate lines wrapped by <tok> tags
+-n              [n]o output of word forms in <word> elements before the set of tokens extracted from each word
 
 <FILE>    A text file encoded in UTF-8 without BOM, one word per line
 
@@ -36,7 +37,7 @@ Examples:
 Tokenize a Coptic plain text file in UTF-8 encoding (without BOM):
   tokenize_coptic.pl in_Coptic_utf8.txt > out_Coptic_tokenized.txt
 
-Copyright 2013, Amir Zeldes
+Copyright 2013-2014, Amir Zeldes
 
 This program is free software. You may copy or redistribute it under
 the same terms as Perl itself.
