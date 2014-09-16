@@ -28,6 +28,7 @@ Options and argument:
 
 -h              print this [h]elp message and quit
 -p              output [p]ipe separated word forms instead of tokens in separate lines wrapped by <norm> tags
+-l               suppress [l]ine tags marking original linebreaks in input file
 -n              [n]o output of word forms in <norm_group> elements before the set of tokens extracted from each group
 
 <FILE>    A text file encoded in UTF-8 without BOM, possibly containing markup
@@ -47,7 +48,7 @@ _USAGE_
 
 ### OPTIONS BEGIN ###
 %opts = ();
-getopts('hnp',\%opts) or die $usage;
+getopts('hlnp',\%opts) or die $usage;
 
 #help
 if ($opts{h} || (@ARGV == 0)) {
@@ -55,6 +56,7 @@ if ($opts{h} || (@ARGV == 0)) {
     exit;
 }
 if ($opts{p})   {$pipes = 1;} else {$pipes = 0;}
+if ($opts{l})   {$nolines = 1;} else {$nolines = 0;}
 if ($opts{n})   {$noword = 1;} else {$noword = 0;}
 
 ### OPTIONS END ###
@@ -118,7 +120,18 @@ $strCurrentTokens = "";
 while (<FILE>) {
 
     chomp;
-    $line = $_;
+	$input = $_;
+	$input =~ s/\n//g;
+	if ($input =~ /^<[^>+]>$/ || $nolines==1)
+	{
+		$line.=$input;
+	}
+	else
+	{
+			$line .= "<line>". $input ."</line>";
+	}
+}
+	
 	
 	$line = &preprocess($line);
 	$line =~ s/^\n+//;
@@ -197,7 +210,7 @@ while (<FILE>) {
 			$strCurrentTokens .= $subline ."\n";		
 		}
 	}
-} 
+ 
 
 	sub tokenize{
 	$strWord = $_[0];
