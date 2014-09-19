@@ -28,7 +28,7 @@ Options and argument:
 
 -h              print this [h]elp message and quit
 -p              output [p]ipe separated word forms instead of tokens in separate lines wrapped by <norm> tags
--l               suppress [l]ine tags marking original linebreaks in input file
+-l               add [l]ine tags marking original linebreaks in input file
 -n              [n]o output of word forms in <norm_group> elements before the set of tokens extracted from each group
 
 <FILE>    A text file encoded in UTF-8 without BOM, possibly containing markup
@@ -56,19 +56,20 @@ if ($opts{h} || (@ARGV == 0)) {
     exit;
 }
 if ($opts{p})   {$pipes = 1;} else {$pipes = 0;}
-if ($opts{l})   {$nolines = 1;} else {$nolines = 0;}
+if ($opts{l})   {$nolines = 0;} else {$nolines = 1;}
 if ($opts{n})   {$noword = 1;} else {$noword = 0;}
 
 ### OPTIONS END ###
 
 ### BUILD LEXICON ###
 #build function word lists
-$pprep = "ⲁϫⲛⲧ|ⲉϩⲣⲁ|ⲉϩⲣⲁⲓⲉϫⲱ|ⲉϫⲛⲧⲉ|ⲉϫⲱ|ⲉⲣⲁⲧ|ⲉⲣⲁⲧⲟⲩ|ⲉⲣⲟ|ⲉⲣⲱ|ⲉⲧⲃⲏⲏⲧ|ⲉⲧⲟⲟⲧ|ϩⲁⲉⲓⲁⲧ|ϩⲁϩⲧⲏ|ϩⲁⲣⲁⲧ|ϩⲁⲣⲓϩⲁⲣⲟ|ϩⲁⲣⲟ|ϩⲁⲣⲱ|ϩⲁⲧⲟⲟⲧ|ϩⲓϫⲱ|ϩⲓⲣⲱ|ϩⲓⲧⲉ|ϩⲓⲧⲟⲟⲧ|ϩⲓⲧⲟⲩⲱ|ϩⲓⲱ|ϩⲓⲱⲱ|ⲕⲁⲧⲁⲣⲟ|ⲕⲁⲧⲁⲣⲱ|ⲙⲙⲟ|ⲙⲙⲱ|ⲙⲛⲛⲥⲱ|ⲙⲡⲁⲙⲧⲟⲉⲃⲟⲗ|ⲛⲏⲧⲛ|ⲛⲁ|ⲛϩⲏⲧ|ⲛⲙⲙⲏ|ⲛⲙⲙⲁ|ⲛⲥⲁⲃⲗⲗⲁ|ⲛⲥⲱ|ⲛⲧⲟⲟⲧ|ⲟⲩⲃⲏ|ϣⲁⲣⲟ|ϣⲁⲣⲱ|ⲛⲏ|ⲛⲛⲁϩⲣⲁ|ⲟⲩⲧⲱ|ⲛⲛⲁϩⲣⲏ|ϩⲁⲧⲏ|ⲉⲧⲃⲏⲏ|ⲛⲣⲁⲧ|ⲉⲣⲁ|ⲛⲁϩⲣⲁ|ⲛϩⲏ|ϩⲓⲧⲟⲟ|ⲕⲁⲧⲁ|ⲙⲉⲭⲣⲓ|ⲡⲁⲣⲁ|ⲉⲧⲃⲉ|ⲛⲧⲉ|ⲙⲛⲛⲥⲱ";
-$nprep = "ⲉ|ⲛ|ⲙ|ⲉⲧⲃⲉ|ϣⲁ|ⲛⲥⲁ|ⲕⲁⲧⲁ|ⲙⲛ|ϩⲓ|ⲛⲧⲉ|ϩⲁⲧⲛ|ϩⲁⲧⲙ|ϩⲓⲣⲙ|ϩⲓⲣⲛ|ⲉⲣⲁⲧ|ϩⲛ|ϩⲙ|ϩⲓⲧⲛ|ϩⲓⲧⲙ|ϩⲓϫⲛ|ϩⲓϫⲙ|ϩⲁ|ⲕⲁⲧⲁ|ⲙⲉⲭⲣⲓ|ⲡⲁⲣⲁ|ⲛⲁ|ⲛⲧⲉ";
+$pprep = "ⲁϫⲛⲧ|ⲉϩⲣⲁ|ⲉϩⲣⲁⲓⲉϫⲱ|ⲉϫⲛⲧⲉ|ⲉϫⲱ|ⲉⲣⲁⲧ|ⲉⲣⲁⲧⲟⲩ|ⲉⲣⲟ|ⲉⲣⲱ|ⲉⲧⲃⲏⲏⲧ|ⲉⲧⲟⲟⲧ|ϩⲁⲉⲓⲁⲧ|ϩⲁϩⲧⲏ|ϩⲁⲣⲁⲧ|ϩⲁⲣⲓϩⲁⲣⲟ|ϩⲁⲣⲟ|ϩⲁⲣⲱ|ϩⲁⲧⲟⲟⲧ|ϩⲓϫⲱ|ϩⲓⲣⲱ|ϩⲓⲧⲉ|ϩⲓⲧⲟⲟⲧ|ϩⲓⲧⲟⲩⲱ|ϩⲓⲱ|ϩⲓⲱⲱ|ⲕⲁⲧⲁⲣⲟ|ⲕⲁⲧⲁⲣⲱ|ⲙⲙⲟ|ⲙⲙⲱ|ⲙⲛⲛⲥⲱ|ⲙⲡⲁⲙⲧⲟⲉⲃⲟⲗ|ⲛⲏⲧⲛ|ⲛⲁ|ⲛϩⲏⲧ|ⲛⲙⲙⲏ|ⲛⲙⲙⲁ|ⲛⲥⲁⲃⲗⲗⲁ|ⲛⲥⲱ|ⲛⲧⲟⲟⲧ|ⲟⲩⲃⲏ|ϣⲁⲣⲟ|ϣⲁⲣⲱ|ⲛⲏ|ⲛⲛⲁϩⲣⲁ|ⲟⲩⲧⲱ|ⲛⲛⲁϩⲣⲏ|ϩⲁⲧⲏ|ⲉⲧⲃⲏⲏ|ⲛⲣⲁⲧ|ⲉⲣⲁ|ⲛⲁϩⲣⲁ|ⲛϩⲏ|ϩⲓⲧⲟⲟ|ⲕⲁⲧⲁ|ⲙⲉⲭⲣⲓ|ⲡⲁⲣⲁ|ⲉⲧⲃⲉ|ⲛⲧⲉ|ⲙⲛⲛⲥⲱ|ⲛⲁϩⲣⲉ?[ⲁⲙⲛ]";
+$nprep = "ⲉ|ⲛ|ⲙ|ⲉⲧⲃⲉ|ϣⲁ|ⲛⲥⲁ|ⲕⲁⲧⲁ|ⲙⲛ|ϩⲓ|ⲛⲧⲉ|ϩⲁⲧⲛ|ϩⲁⲧⲙ|ϩⲓⲣⲙ|ϩⲓⲣⲛ|ⲉⲣⲁⲧ|ϩⲛ|ϩⲙ|ϩⲓⲧⲛ|ϩⲓⲧⲙ|ϩⲓϫⲛ|ϩⲓϫⲙ|ϩⲁ|ⲕⲁⲧⲁ|ⲙⲉⲭⲣⲓ|ⲡⲁⲣⲁ|ⲛⲁ|ⲛⲧⲉ|ⲛⲁϩⲣⲉ?[ⲙⲛ]";
 $indprep = "ⲉⲧⲃⲉ|ϩⲛ|ϩⲙ";
 $ppers = "ⲓ|ⲕ|ϥ|ⲥ|ⲛ|ⲧⲉⲧⲛ|(?<=ⲙⲡ)ⲉⲧⲛ|(?<=ϣⲁⲛⲧ)ⲉⲧⲛ|(?<=ⲧⲣⲉ)ⲧⲛ|ⲟ?ⲩ|(?<=ⲛ)ⲅ";
-$ppero = "ⲓ|ⲕ|ϥ|ⲥ|ⲛ|ⲧⲛ|ⲧⲏⲩⲧⲛ|ⲟ?ⲩ";
-$art = "ⲡ|ⲡⲉ(?=(?:[^ⲁⲉⲓⲟⲩⲏⲱ][^ⲁⲉⲓⲟⲩⲏⲱ]|ⲯ|ⲭ|ⲑ|ⲫ|ⲝ|ϩⲟⲟⲩ|ⲟ?ⲩⲟⲉⲓϣ|ⲣⲟⲙⲡⲉ|ⲟ?ⲩϣⲏ|ⲟ?ⲩⲛⲟⲩ))|ⲛ|ⲛⲉ(?=(?:[^ⲁⲉⲓⲟⲩⲏⲱ][^ⲁⲉⲓⲟⲩⲏⲱ]|ⲯ|ⲭ|ⲑ|ⲫ|ⲝ|ϩⲟⲟⲩ|ⲟ?ⲩⲟⲉⲓϣ|ⲣⲟⲙⲡⲉ|ⲟ?ⲩϣⲏ|ⲟ?ⲩⲛⲟⲩ))|ⲧ|ⲧⲉ(?=(?:[^ⲁⲉⲓⲟⲩⲏⲱ][^ⲁⲉⲓⲟⲩⲏⲱ]|ⲯ|ⲭ|ⲑ|ⲫ|ⲝ|ϩⲟⲟⲩ|ⲟ?ⲩⲟⲉⲓϣ|ⲣⲟⲙⲡⲉ|ⲟ?ⲩϣⲏ|ⲟ?ⲩⲛⲟⲩ))|ⲟⲩ|ϩⲉⲛ|ⲡⲉⲓ|ⲧⲉⲓ|ⲛⲉⲓ|ⲕⲉ|ⲙ(?=ⲙ)|ⲡⲓ|ⲛⲓ|ϯ";
+$ppero = "ⲓ|ⲕ|ϥ|ⲥ|ⲛ|ⲧⲛ|ⲧⲏⲩⲧⲛ|ⲟ?ⲩ|(?<=[ⲉⲟ]ⲟⲩ)ⲧ";
+$pperinterloc = "ⲁⲛⲅ|ⲛⲧⲕ|ⲛⲧⲉ|ⲁⲛ|ⲁⲛⲟⲛ|ⲛⲧⲉⲧⲛ";
+$art = "ⲡ|ⲡⲉ(?=(?:[^ⲁⲉⲓⲟⲩⲏⲱ][^ⲁⲉⲓⲟⲩⲏⲱ]|ⲯ|ⲭ|ⲑ|ⲫ|ⲝ|ϩⲟⲟⲩ|ⲟ?ⲩⲟⲉⲓϣ|ⲣⲟⲙⲡⲉ|ⲟ?ⲩϣⲏ|ⲟ?ⲩⲛⲟⲩ))|ⲛ|ⲛⲉ(?=(?:[^ⲁⲉⲓⲟⲩⲏⲱ][^ⲁⲉⲓⲟⲩⲏⲱ]|ⲯ|ⲭ|ⲑ|ⲫ|ⲝ|ϩⲟⲟⲩ|ⲟ?ⲩⲟⲉⲓϣ|ⲣⲟⲙⲡⲉ|ⲟ?ⲩϣⲏ|ⲟ?ⲩⲛⲟⲩ))|ⲧ|ⲧⲉ(?=(?:[^ⲁⲉⲓⲟⲩⲏⲱ][^ⲁⲉⲓⲟⲩⲏⲱ]|ⲯ|ⲭ|ⲑ|ⲫ|ⲝ|ϩⲟⲟⲩ|ⲟ?ⲩⲟⲉⲓϣ|ⲣⲟⲙⲡⲉ|ⲟ?ⲩϣⲏ|ⲟ?ⲩⲛⲟⲩ))|ⲟⲩ|(?<=[ⲁⲉ])ⲩ|ϩⲉⲛ|ⲡⲉⲓ|ⲧⲉⲓ|ⲛⲉⲓ|ⲕⲉ|ⲙ(?=ⲙ)|ⲡⲓ|ⲛⲓ|ϯ";
 $ppos = "[ⲡⲧⲛ]ⲉ[ⲕϥⲥⲛⲩ]|[ⲡⲧⲛ]ⲉⲧⲛ|[ⲡⲧⲛ]ⲁ";
 $triprobase = "ⲁ|ⲙⲡ|ⲙⲡⲉ|ϣⲁ|ⲙⲉ|ⲙⲡⲁⲧ|ϣⲁⲛⲧⲉ?|ⲛⲧⲉⲣⲉ?|ⲛⲛⲉ|ⲛⲧⲉ|ⲛ|ⲧⲣⲉ|ⲧⲁⲣⲉ|ⲙⲁⲣⲉ|ⲙⲡⲣⲧⲣⲉ"; 
 $trinbase = "ⲁ|ⲙⲡⲉ|ϣⲁⲣⲉ|ⲙⲉⲣⲉ|ⲙⲡⲁⲧⲉ|ϣⲁⲛⲧⲉ|ⲛⲧⲉⲣⲉ|ⲛⲛⲉ|ⲛⲧⲉⲣⲉ|ⲛⲧⲉ|ⲧⲣⲉ|ⲧⲁⲣⲉ|ⲙⲁⲣⲉ|ⲙⲡⲣⲧⲣⲉ|ⲉⲣϣⲁⲛ";
@@ -90,6 +91,7 @@ while (<LEX>) {
 	elsif ($2 eq 'VSTAT') {$vstatlist .= "$1|";} 
 	elsif ($2 eq 'ADV') {$advlist .= "$1|";} 
 	elsif ($2 eq 'VBD') {$vbdlist .= "$1|";} 
+	elsif ($2 eq 'IMOD') {$imodlist .= "$1|";} 
 	else {$stoplist{$1} = "$1;$2";} 
 	}
 }
@@ -102,11 +104,11 @@ $tm = $verblist;
 $tm =~ s/\|/|ⲧⲙ/g;
 $verblist .=  "$tm";
 
-$nounlist .="%%%";
+$nounlist .="ⲥⲁⲧⲁⲛⲁⲥ|%%%";
 $verblist .="%%%";
 $vstatlist .="%%%";
 $advlist .="%%%";
-$namelist .="%%%";
+$namelist .="ⲡⲁⲓ|ⲧⲁⲓ|ⲛⲁⲓ|ϭⲉ|%%%";
 }
 ### END LEXICON ###
 
@@ -124,7 +126,7 @@ while (<FILE>) {
 	$input =~ s/\n//g;
 	if ($input =~ /^<[^>+]>$/ || $nolines==1)
 	{
-		$line.=$input;
+		$line.=$input . " ";
 	}
 	else
 	{
@@ -286,19 +288,24 @@ while (<FILE>) {
 					$strWord = $start . "ⲧ". $candidate;
 				}
 			}
-			
-			#check stoplist
-			if (exists $stoplist{$strWord}) {$strWord = $strWord;} 
-		
+					
 			#adhoc segmentations
-			elsif ($strWord =~ /^ⲛⲁⲩ$/){$strWord = "ⲛⲁ|ⲩ";} #free standing nau is a PP not a V
+			if ($strWord =~ /^ⲛⲁⲩ$/){$strWord = "ⲛⲁ|ⲩ";} #free standing nau is a PP not a V
 			elsif ($strWord =~ /^ⲛⲁϣ$/){$strWord = "ⲛ|ⲁϣ";} #"in which (way)"
 			elsif ($strWord =~ /^ⲉⲓⲣⲉ$/){$strWord = "ⲉⲓⲣⲉ";} #free standing eire is not e|i|re
+			elsif ($strWord =~ /^ϩⲟⲡⲟⲩ$/){$strWord = "ϩⲟⲡⲟⲩ";} #free standing hopou is not hop|ou
 			elsif ($strWord =~ /^ⲉϫⲓ$/){$strWord = "ⲉ|ϫⲓ";} 
 			elsif ($strWord =~ /^ⲛⲏⲧⲛ$/){$strWord = "ⲛⲏ|ⲧⲛ";} 
+
+			#check stoplist
+			elsif (exists $stoplist{$strWord}) {$strWord = $strWord;} 
 			
 			#adverbs
 			elsif ($strWord =~ /^($advlist)$/){$strWord = $1;}
+			
+			#optative/conditional, make ppers a portmanteau segment with base
+			elsif ($strWord =~ /^(ⲉ)($ppers)(ⲉ|ϣⲁⲛ)($verblist)$/) {$strWord = $1 . $2 . $3 . "|" . $4;}
+			elsif ($strWord =~ /^(ⲉ)($ppers)(ⲉ|ϣⲁⲛ)($verblist)($nounlist)$/) {$strWord = $1 . $2 . $3 . "|" . $4."|" . $5;}
 			
 			
 			#ⲧⲏⲣ=
@@ -338,6 +345,10 @@ while (<FILE>) {
 			elsif ($strWord =~ /^(ⲛϭⲓ)($art)(ⲉⲧ)($verblist|$vstatlist|$advlist)$/) {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4;}
 			elsif ($strWord =~ /^(ⲛϭⲓ)($art)(ⲉⲧ)($pprep)($ppero)$/) {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4 ."|" . $5;}
 			elsif ($strWord =~ /^(ⲛϭⲓ)($art)(ⲉⲧ)(ⲛⲁ)($verblist|$vstatlist|$advlist)$/) {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4 ."|" . $5;}
+			#with preposition
+			elsif ($strWord =~ /^($nprep)($art)(ⲉⲧ)($verblist|$vstatlist|$advlist)$/) {$strWord = $1 . "|" . $2 . "|" . $3. "|" . $4;}
+			elsif ($strWord =~ /^($nprep)($art)(ⲉⲧ)($pprep)($ppero)$/) {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5;}
+			elsif ($strWord =~ /^($nprep)($art)(ⲉⲧ)(ⲛⲁ)($verblist|$vstatlist|$advlist)$/) {$strWord = $1 . "|" . $2 . "|" . $3. "|" . $4 . "|" . $5;}
 			#presentative
 			elsif ($strWord =~ /^(ⲉⲓⲥ)($art|$ppos)($nounlist)$/) {$strWord = $1 . "|" . $2 . "|" . $3;}
 
@@ -378,6 +389,10 @@ while (<FILE>) {
 			elsif ($strWord =~ /^(ⲉⲧ?|ⲛⲉ)($exist)($nounlist)(ⲛⲁ)($verblist)$/) {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5;}
 			elsif ($strWord =~ /^(ⲉⲧ?|ⲛⲉ)($exist)($nounlist)(ⲛⲁ)($verblist)($ppero)$/) {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5. "|".$6;}
 
+			#interlocutive nominal sentence
+			elsif ($strWord =~ /^($pperinterloc)($art|$ppos)($nounlist)$/) {$strWord = $1 . "|" . $2  . "|" . $3 ;}
+			
+			
 			#simple NP - moved from before "relative generic NP p-et-o, ... " to account for preterite ne|u-sotm instead of possessive *neu-sotm with nominalized verb
 			#if this causes trouble consider splitting ART and PPOS cases of simple NP
 			elsif ($strWord =~ /^(ⲛϭⲓ)($art|$ppos)($nounlist)$/) {$strWord = $1 . "|" . $2 . "|" . $3;}
@@ -395,17 +410,17 @@ while (<FILE>) {
 
 			#converted tripartite clause
 			#pronominal
-			elsif ($strWord =~ /^(ⲉ?ⲛⲧ|ⲉ)(ⲁ)($ppers)($verblist)$/) {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4;}
-			elsif ($strWord =~ /^(ⲉ?ⲛⲧ|ⲉ)(ⲁ)($ppers)($verblist)($ppero)$/)  {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5;}
-			elsif ($strWord =~ /^(ⲉ?ⲛⲧ|ⲉ)(ⲁ)($ppers)($verblist)($nounlist)$/)  {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5;}
+			elsif ($strWord =~ /^(ⲉ?ⲛⲧ|ⲉ)(ⲁ|ⲛⲛⲉ)($ppers)($verblist)$/) {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4;}
+			elsif ($strWord =~ /^(ⲉ?ⲛⲧ|ⲉ)(ⲁ|ⲛⲛⲉ)($ppers)($verblist)($ppero)$/)  {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5;}
+			elsif ($strWord =~ /^(ⲉ?ⲛⲧ|ⲉ)(ⲁ|ⲛⲛⲉ)($ppers)($verblist)($nounlist)$/)  {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5;}
 			elsif ($strWord =~ /^($art)(ⲉⲛⲧ)(ⲁ)($ppers)($verblist)$/) {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5;} #nominalized
 			elsif ($strWord =~ /^($art)(ⲉⲛⲧ)(ⲁ)($ppers)($verblist)($ppero)$/) {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5 . "|" . $6;} #nominalized
 			###
 			#prenominal
-			elsif ($strWord =~ /^(ⲉ?ⲛⲧ|ⲉ)(ⲁ)($art|$ppos)($nounlist)$/)   {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4;}
-			elsif ($strWord =~ /^(ⲉ?ⲛⲧ|ⲉ)(ⲁ)($art|$ppos)($nounlist)($verblist)$/)   {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4 ."|" . $5;}
-			elsif ($strWord =~ /^(ⲉ?ⲛⲧ|ⲉ)(ⲁ)($art|$ppos)($nounlist)($verblist)($ppero)$/)  {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5. "|".$6;}
-			elsif ($strWord =~ /^(ⲉ?ⲛⲧ|ⲉ)(ⲁ)($art|$ppos)($nounlist)($verblist)($nounlist)$/)  {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5. "|".$6;}
+			elsif ($strWord =~ /^(ⲉ?ⲛⲧ|ⲉ)(ⲁ|ⲛⲛⲉ)($art|$ppos)($nounlist)$/)   {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4;}
+			elsif ($strWord =~ /^(ⲉ?ⲛⲧ|ⲉ)(ⲁ|ⲛⲛⲉ)($art|$ppos)($nounlist)($verblist)$/)   {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4 ."|" . $5;}
+			elsif ($strWord =~ /^(ⲉ?ⲛⲧ|ⲉ)(ⲁ|ⲛⲛⲉ)($art|$ppos)($nounlist)($verblist)($ppero)$/)  {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5. "|".$6;}
+			elsif ($strWord =~ /^(ⲉ?ⲛⲧ|ⲉ)(ⲁ|ⲛⲛⲉ)($art|$ppos)($nounlist)($verblist)($nounlist)$/)  {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5. "|".$6;}
 			elsif ($strWord =~ /^($art)(ⲉⲛⲧ)(ⲁ)($art|$ppos)($nounlist)$/) {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5;}  #nominalized
 			elsif ($strWord =~ /^($art)(ⲉⲛⲧ)(ⲁ)($art|$ppos)($nounlist)($verblist)$/) {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5. "|" . $6;}  #nominalized
 
@@ -415,14 +430,20 @@ while (<FILE>) {
 			elsif ($strWord =~ /^(ⲛⲉ|ⲉ)((?:ⲟⲩⲛⲧ|ⲙⲛⲧ)[ⲁⲉⲏ]?)($ppers)($nounlist)$/) {$strWord = $1 . "|" . $2 . "|" . $3."|".$4;}
 			elsif ($strWord =~ /^(ⲛⲉ|ⲉ)((?:ⲟⲩⲛⲧ|ⲙⲛⲧ)[ⲁⲉⲏ]?)($ppers)$/) {$strWord = $1 . "|" . $2 . "|" . $3 ;}
 
-			#optative/conditional, make ppers a portmanteau segment with base
-			elsif ($strWord =~ /^(ⲉ)($ppers)(ⲉ|ϣⲁⲛ)($verblist)$/) {$strWord = $1 . $2 . $3 . "|" . $4;}
-			
+			#IMOD
+			elsif ($strWord =~ /^($imodlist)($ppero)$/) {$strWord = $1 . "|" . $2;}
+
 			#converter+prep
 			elsif ($strWord =~ /^(ⲉⲧ)($indprep)$/) {$strWord = $1 . "|" . $2;}
 
+			#PP with no article
+			elsif ($strWord =~ /^($nprep)($nounlist|$namelist)$/) {$strWord = $1 . "|" . $2;}
+
 			#negative imperative
 			elsif ($strWord =~ /^(ⲙⲡⲣ)($verblist)$/) {$strWord = $1 . "|" . $2;}
+
+			#tm preposed before subject in negative conjunctive with separated verb
+			elsif ($strWord =~ /^(ⲛⲧⲉ)(ⲧⲙ)($nounlist)$/) {$strWord = $1 . "|" . $2. "|" . $3;}
 
 			#else {			
 			#nothing found
