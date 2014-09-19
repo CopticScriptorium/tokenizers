@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# tokenize_coptic.pl Version 2.0.0
+# tokenize_coptic.pl Version 2.0.1
 
 # this assumes a UTF-8 file with untokenized 'word forms'
 # separated by spaces
