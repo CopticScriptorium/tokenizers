@@ -8,12 +8,12 @@ afsotp nqi phllo
 
 Is tokenized into
 
-a
-f
-sotp
-nqi
-p
-hllo
+a<br>
+f<br>
+sotp<br>
+nqi<br>
+p<br>
+hllo<br>
 
 In order to retain the original word form border, the script optionally outputs the whole word
 as well in an SGML tag aruond each group of tokens. The script ignores inline SGML tags,
@@ -25,9 +25,10 @@ Usage:  tokenize_coptic.pl [options] <FILE>
 
 Options and argument:
 
--h              print this [h]elp message and quit
--p              output [p]ipe separated word forms instead of tokens in separate lines wrapped by <tok> tags
--n              [n]o output of word forms in <word> elements before the set of tokens extracted from each word
+-h              print this [h]elp message and quit<br>
+-l              add [l]ine tags marking original linebreaks in input file<br>
+-n              [n]o output of word forms in <norm_group> elements before the set of tokens extracted from each group<br>
+-p              output [p]ipe separated word forms instead of tokens in separate lines wrapped by <tok> tags<br>
 
 <FILE>    A text file encoded in UTF-8 without BOM, one word per line
 
@@ -36,6 +37,8 @@ Examples:
 
 Tokenize a Coptic plain text file in UTF-8 encoding (without BOM):
   tokenize_coptic.pl in_Coptic_utf8.txt > out_Coptic_tokenized.txt
+  
+v2.0.1 adds the -l parameter, which allows tokenization of text that breaks across lines (as in a diplomatic transcription of a manuscript)
 
 Copyright 2013-2014, Amir Zeldes
 
