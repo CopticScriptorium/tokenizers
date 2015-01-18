@@ -44,3 +44,41 @@ the same terms as Perl itself.
 
 This script relies on a lexicon derived from materials kindly provided by Prof. Tito Orlandi
 of the CMCL project. Please cite CMCL whenever using this script for your publications.
+
+
+
+Coptic SCRIPTORIUM Process Dipl Script
+======================================
+The script process_dipl.pl is meant to take a manually tokenized file in the following 
+format and transform it into SGML. The input should look like the (UTF-8 equivalent of) 
+this:
+
+<pb xml="ZC301"><cb><note note="written lightly on the right hand side.">
+a|f|sOtm_nqi|p|r<supplied reason="lost, hole">O</supplied>me_e|tef|</note>
+son_
+et|...
+</pb>
+
+Note that bound groups are separated by underscores (_), whether or not they stand at the end of a line.
+Lines in the manuscript are marked by line breaks and morphs are separated by pipes (|).
+Other SGML markup is allowed such as <pb>, <note> etc. The result is a file like this:
+
+<pb>
+<cb>
+<line>
+<note note="written lightly on the right hand side.">
+<word word="afsOtm">
+<morph morph="a">
+a
+</morph>
+<morph morph="f">
+f
+</morph>
+<morph morph="sOtm">
+sOtm
+</morph>
+</word>
+...
+</note>
+...
+</pb>
