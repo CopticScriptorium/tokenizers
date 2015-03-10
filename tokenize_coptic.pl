@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# tokenize_coptic.pl Version 2.0.1
+# tokenize_coptic.pl Version 2.0.2
 
 # this assumes a UTF-8 file with untokenized 'word forms'
 # separated by spaces
@@ -27,9 +27,9 @@ Usage:  tokenize_coptic.pl [options] <FILE>
 Options and argument:
 
 -h              print this [h]elp message and quit
--p              output [p]ipe separated word forms instead of tokens in separate lines wrapped by <norm> tags
+-p              output [p]ipe separated word forms instead of tokens in separate lines wrapped by <orig> tags
 -l               add [l]ine tags marking original linebreaks in input file
--n              [n]o output of word forms in <norm_group> elements before the set of tokens extracted from each group
+-n              [n]o output of word forms in <orig_group> elements before the set of tokens extracted from each group
 
 <FILE>    A text file encoded in UTF-8 without BOM, possibly containing markup
 
@@ -141,7 +141,7 @@ while (<FILE>) {
 
 	@sublines = split("\n+",$line);
 	foreach $subline (@sublines)	{
-		if ($subline =~ /<norm_group norm_group=\"([^\"]+)\">/) {
+		if ($subline =~ /<orig_group orig_group=\"([^\"]+)\">/) {
 			#bound groups begins, tokenize full form from element attribute
 			if ($preFirstWord == 1)
 			{
@@ -153,12 +153,12 @@ while (<FILE>) {
 			print $strCurrentTokens;
 			$strCurrentTokens = "";
 			$strTokenized = &tokenize($word);
-			if ($noword == 1) {$subline =~ s/\n*<norm_group[^>]*>\n*//g; print $subline;
+			if ($noword == 1) {$subline =~ s/\n*<orig_group[^>]*>\n*//g; print $subline;
 			}
 			else{	print $subline ."\n";}
 			
 		}
-		elsif ($subline eq "</norm_group>"){
+		elsif ($subline eq "</orig_group>"){
 			#bound group ends, flush tags and output resegmented tokens
 				#search for morphemes to add
 
@@ -172,34 +172,34 @@ while (<FILE>) {
 			$strPattern =~ s/(.*)/(?<!\\")\($1\)/; #negative lookbehind prevents matching tokens within a quoted attribute in an SGML tag
 			$count = () = $strTokenized =~ /\|/g; 
 			if ($strCurrentTokens =~ /$strPattern/){
-				if ($count==0) {$strCurrentTokens =~ s/$strPattern/<norm norm=\"$t[(1-1)]\">\n$1\n<\/norm>\n/;}
-				elsif ($count==1) {$strCurrentTokens =~ s/$strPattern/<norm norm=\"$t[0]\">\n$1\n<\/norm>\n<norm norm=\"$t[1]\">\n$2\n<\/norm>\n/;}
-				elsif ($count==2) {$strCurrentTokens =~ s/$strPattern/<norm norm=\"$t[(1-1)]\">\n$1\n<\/norm>\n<norm norm=\"$t[(2-1)]\">\n$2\n<\/norm>\n<norm norm=\"$t[(3-1)]\">\n$3\n<\/norm>\n/;}
-				elsif ($count==3) {$strCurrentTokens =~ s/$strPattern/<norm norm=\"$t[(1-1)]\">\n$1\n<\/norm>\n<norm norm=\"$t[(2-1)]\">\n$2\n<\/norm>\n<norm norm=\"$t[(3-1)]\">\n$3\n<\/norm>\n<norm norm=\"$t[(4-1)]\">\n$4\n<\/norm>\n/;}
-				elsif ($count==4) {$strCurrentTokens =~ s/$strPattern/<norm norm=\"$t[(1-1)]\">\n$1\n<\/norm>\n<norm norm=\"$t[(2-1)]\">\n$2\n<\/norm>\n<norm norm=\"$t[(3-1)]\">\n$3\n<\/norm>\n<norm norm=\"$t[(4-1)]\">\n$4\n<\/norm>\n<norm norm=\"$t[(5-1)]\">\n$5\n<\/norm>\n/;}
-				elsif ($count==5) {$strCurrentTokens =~ s/$strPattern/<norm norm=\"$t[(1-1)]\">\n$1\n<\/norm>\n<norm norm=\"$t[(2-1)]\">\n$2\n<\/norm>\n<norm norm=\"$t[(3-1)]\">\n$3\n<\/norm>\n<norm norm=\"$t[(4-1)]\">\n$4\n<\/norm>\n<norm norm=\"$t[(5-1)]\">\n$5\n<\/norm>\n<norm norm=\"$t[(6-1)]\">\n$6\n<\/norm>\n/;}
-				elsif ($count==6) {$strCurrentTokens =~ s/$strPattern/<norm norm=\"$t[(1-1)]\">\n$1\n<\/norm>\n<norm norm=\"$t[(2-1)]\">\n$2\n<\/norm>\n<norm norm=\"$t[(3-1)]\">\n$3\n<\/norm>\n<norm norm=\"$t[(4-1)]\">\n$4\n<\/norm>\n<norm norm=\"$t[(5-1)]\">\n$5\n<\/norm>\n<norm norm=\"$t[(6-1)]\">\n$6\n<\/norm>\n<norm norm=\"$t[(7-1)]\">\n$7\n<\/norm>\n/;}
-				elsif ($count==7) {$strCurrentTokens =~ s/$strPattern/<norm norm=\"$t[(1-1)]\">\n$1\n<\/norm>\n<norm norm=\"$t[(2-1)]\">\n$2\n<\/norm>\n<norm norm=\"$t[(3-1)]\">\n$3\n<\/norm>\n<norm norm=\"$t[(4-1)]\">\n$4\n<\/norm>\n<norm norm=\"$t[(5-1)]\">\n$5\n<\/norm>\n<norm norm=\"$t[(6-1)]\">\n$6\n<\/norm>\n<norm norm=\"$t[(7-1)]\">\n$7\n<\/norm>\n<norm norm=\"$t[(8-1)]\">\n$8\n<\/norm>\n/;}
-				elsif ($count==8) {$strCurrentTokens =~ s/$strPattern/<norm norm=\"$t[(1-1)]\">\n$1\n<\/norm>\n<norm norm=\"$t[(2-1)]\">\n$2\n<\/norm>\n<norm norm=\"$t[(3-1)]\">\n$3\n<\/norm>\n<norm norm=\"$t[(4-1)]\">\n$4\n<\/norm>\n<norm norm=\"$t[(5-1)]\">\n$5\n<\/norm>\n<norm norm=\"$t[(6-1)]\">\n$6\n<\/norm>\n<norm norm=\"$t[(7-1)]\">\n$7\n<\/norm>\n<norm norm=\"$t[(8-1)]\">\n$8\n<\/norm>\n<norm norm=\"$t[(9-1)]\">\n$9\n<\/norm>\n/;}
+				if ($count==0) {$strCurrentTokens =~ s/$strPattern/<orig orig=\"$t[(1-1)]\">\n$1\n<\/orig>\n/;}
+				elsif ($count==1) {$strCurrentTokens =~ s/$strPattern/<orig orig=\"$t[0]\">\n$1\n<\/orig>\n<orig orig=\"$t[1]\">\n$2\n<\/orig>\n/;}
+				elsif ($count==2) {$strCurrentTokens =~ s/$strPattern/<orig orig=\"$t[(1-1)]\">\n$1\n<\/orig>\n<orig orig=\"$t[(2-1)]\">\n$2\n<\/orig>\n<orig orig=\"$t[(3-1)]\">\n$3\n<\/orig>\n/;}
+				elsif ($count==3) {$strCurrentTokens =~ s/$strPattern/<orig orig=\"$t[(1-1)]\">\n$1\n<\/orig>\n<orig orig=\"$t[(2-1)]\">\n$2\n<\/orig>\n<orig orig=\"$t[(3-1)]\">\n$3\n<\/orig>\n<orig orig=\"$t[(4-1)]\">\n$4\n<\/orig>\n/;}
+				elsif ($count==4) {$strCurrentTokens =~ s/$strPattern/<orig orig=\"$t[(1-1)]\">\n$1\n<\/orig>\n<orig orig=\"$t[(2-1)]\">\n$2\n<\/orig>\n<orig orig=\"$t[(3-1)]\">\n$3\n<\/orig>\n<orig orig=\"$t[(4-1)]\">\n$4\n<\/orig>\n<orig orig=\"$t[(5-1)]\">\n$5\n<\/orig>\n/;}
+				elsif ($count==5) {$strCurrentTokens =~ s/$strPattern/<orig orig=\"$t[(1-1)]\">\n$1\n<\/orig>\n<orig orig=\"$t[(2-1)]\">\n$2\n<\/orig>\n<orig orig=\"$t[(3-1)]\">\n$3\n<\/orig>\n<orig orig=\"$t[(4-1)]\">\n$4\n<\/orig>\n<orig orig=\"$t[(5-1)]\">\n$5\n<\/orig>\n<orig orig=\"$t[(6-1)]\">\n$6\n<\/orig>\n/;}
+				elsif ($count==6) {$strCurrentTokens =~ s/$strPattern/<orig orig=\"$t[(1-1)]\">\n$1\n<\/orig>\n<orig orig=\"$t[(2-1)]\">\n$2\n<\/orig>\n<orig orig=\"$t[(3-1)]\">\n$3\n<\/orig>\n<orig orig=\"$t[(4-1)]\">\n$4\n<\/orig>\n<orig orig=\"$t[(5-1)]\">\n$5\n<\/orig>\n<orig orig=\"$t[(6-1)]\">\n$6\n<\/orig>\n<orig orig=\"$t[(7-1)]\">\n$7\n<\/orig>\n/;}
+				elsif ($count==7) {$strCurrentTokens =~ s/$strPattern/<orig orig=\"$t[(1-1)]\">\n$1\n<\/orig>\n<orig orig=\"$t[(2-1)]\">\n$2\n<\/orig>\n<orig orig=\"$t[(3-1)]\">\n$3\n<\/orig>\n<orig orig=\"$t[(4-1)]\">\n$4\n<\/orig>\n<orig orig=\"$t[(5-1)]\">\n$5\n<\/orig>\n<orig orig=\"$t[(6-1)]\">\n$6\n<\/orig>\n<orig orig=\"$t[(7-1)]\">\n$7\n<\/orig>\n<orig orig=\"$t[(8-1)]\">\n$8\n<\/orig>\n/;}
+				elsif ($count==8) {$strCurrentTokens =~ s/$strPattern/<orig orig=\"$t[(1-1)]\">\n$1\n<\/orig>\n<orig orig=\"$t[(2-1)]\">\n$2\n<\/orig>\n<orig orig=\"$t[(3-1)]\">\n$3\n<\/orig>\n<orig orig=\"$t[(4-1)]\">\n$4\n<\/orig>\n<orig orig=\"$t[(5-1)]\">\n$5\n<\/orig>\n<orig orig=\"$t[(6-1)]\">\n$6\n<\/orig>\n<orig orig=\"$t[(7-1)]\">\n$7\n<\/orig>\n<orig orig=\"$t[(8-1)]\">\n$8\n<\/orig>\n<orig orig=\"$t[(9-1)]\">\n$9\n<\/orig>\n/;}
 			}
 			else { 
 				if  ($count==0) {
-					$strCurrentTokens =  "<norm warning=\"no pattern match for token\">\n" . $strCurrentTokens . "\n</norm>\n"; #no match for pattern
+					$strCurrentTokens =  "<orig warning=\"no pattern match for token\">\n" . $strCurrentTokens . "\n</orig>\n"; #no match for pattern
 				}
 				else {
-					$strTokenized =~ s/\|/\n<\/norm>\n<norm>\n/g;
-					$strCurrentTokens = "<norm>\n" . $strTokenized . "\n<\/norm>\n";
+					$strTokenized =~ s/\|/\n<\/orig>\n<orig>\n/g;
+					$strCurrentTokens = "<orig>\n" . $strTokenized . "\n<\/orig>\n";
 				}
 			}
 			$strCurrentTokens =~ s/\n+/\n/g;
 			if ($pipes == 1)
 			{
-				$strCurrentTokens =~ s/\n<\/norm>\n<norm[^>]*>\n/|/g;
-				$strCurrentTokens =~ s/<\/?norm[^>]*>\n//g;
+				$strCurrentTokens =~ s/\n<\/orig>\n<orig[^>]*>\n/|/g;
+				$strCurrentTokens =~ s/<\/?orig[^>]*>\n//g;
 			}
 			print $strCurrentTokens;
 			$strCurrentTokens = "";
-			if ($noword == 1) {$subline =~ s/\n*<\/?norm_group[^>]*>\n*//g;}
+			if ($noword == 1) {$subline =~ s/\n*<\/?orig_group[^>]*>\n*//g;}
 			print $subline ;
 		}
 		elsif ($subline =~ /<.*>/) {
@@ -462,7 +462,7 @@ sub preprocess{
 
 	$rawline = $_[0];
 	$rawline =~ s/([^< ]+) (?=[^<>]*>)/$1%/g;
-	$rawline =~ s/(^| )([^ ]+)(?= |$)/$1 . '<norm_group%norm_group="' . &removexml($2) . '">' . $2 . "<\/norm_group>"/eg;
+	$rawline =~ s/(^| )([^ ]+)(?= |$)/$1 . '<orig_group%orig_group="' . &removexml($2) . '">' . $2 . "<\/orig_group>"/eg;
 	$rawline =~ s/>/>\n/g;
 	$rawline =~ s/</\n</g;
 	$rawline =~ s/\n+/\n/g;
