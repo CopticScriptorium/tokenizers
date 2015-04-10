@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# tokenize_coptic.pl Version 2.0.3
+# tokenize_coptic.pl Version 2.0.4
 
 # this assumes a UTF-8 file with untokenized 'word forms'
 # separated by spaces
@@ -480,7 +480,7 @@ sub preprocess{
 
 	$rawline = $_[0];
 	$rawline =~ s/([^<  ]+) (?=[^<>]*>)/$1%/g;
-	$rawline =~ s/(^| +)([^ ]+)(?= +|$)/$1 . '<norm_group%norm_group="' . &removexml($2) . '">' . $2 . "<\/norm_group>"/eg;
+	$rawline =~ s/(^|[_ ]+)([^ _]+)(?=[_ ]+|$)/$1 . '<norm_group%norm_group="' . &removexml($2) . '">' . $2 . "<\/norm_group>"/eg;
 	$rawline =~ s/>/>\n/g;
 	$rawline =~ s/</\n</g;
 	$rawline =~ s/\n+/\n/g;
