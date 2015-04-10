@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# tokenize_coptic.pl Version 2.0.4
+# tokenize_coptic.pl Version 2.0.5
 
 # this assumes a UTF-8 file with untokenized 'word forms'
 # separated by spaces
@@ -31,7 +31,7 @@ Options and argument:
 -l               add [l]ine tags marking original linebreaks in input file
 -n              [n]o output of word forms in <norm_group> elements before the set of tokens extracted from each group
 
-<FILE>    A text file encoded in UTF-8 without BOM, possibly containing markup
+<FILE>    A text file encoded in UTF-8 without BOM, possibly containing markup. Bound groups are separated by spaces or underscores.
 
 
 Examples:
@@ -480,13 +480,17 @@ sub preprocess{
 
 	$rawline = $_[0];
 	$rawline =~ s/([^<  ]+) (?=[^<>]*>)/$1%/g;
-	$rawline =~ s/(^|[_ ]+)([^ _]+)(?=[_ ]+|$)/$1 . '<norm_group%norm_group="' . &removexml($2) . '">' . $2 . "<\/norm_group>"/eg;
+	$rawline =~ s/([^<_]+)_(?=[^<>]*>)/$1@/g;
+	$rawline =~ s/_/ /g;	
+	$rawline =~ s/ +/ /g;	
+	$rawline =~ s/(^| +)([^ ]+)(?=[ ]+|$)/$1 . '<norm_group%norm_group="' . &removexml($2) . '">' . $2 . "<\/norm_group>"/eg;
 	$rawline =~ s/>/>\n/g;
 	$rawline =~ s/</\n</g;
 	$rawline =~ s/\n+/\n/g;
 	$rawline =~ s/^\n//;
 	$rawline =~ s/\n$//;
 	$rawline =~ s/%/ /g;
+	$rawline =~ s/@/_/g;
 	$rawline;
 	
 }
