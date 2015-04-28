@@ -4,7 +4,7 @@ This Perl script tokenizes a running text of Sahidic Coptic word forms into thei
 morphemes, ideally compatible with the Coptic SCRIPTORIUM part-of-speech tagging guidelines.
 The script expects space separated word forms in UTF-8, e.g. (the UTF-8 equivalent of):
 
-afsotp nqi phllo
+afsotp nqiphllo
 
 Is tokenized into
 
