@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# tokenize_coptic.pl Version 3.0.0
+# tokenize_coptic.pl Version 3.0.1
 
 # this assumes a UTF-8 file with untokenized 'word forms'
 # two files must be present in the tokenizer directory: copt_lex.tab and segmentation_table.tab
@@ -185,7 +185,6 @@ while (<FILE>) {
 			$strPattern = ($strTokenized);
 			@t = split(/\|/, $strTokenized);
 
-			print "strPattern is initially $strPattern\n";
 			$strPattern =~ s/([\[\]\(\)])/\\$1/g;
 			$strPattern =~ s/([^\\])/$1\#/g;
 			$strPattern =~ s/\|/\)\(/g;
