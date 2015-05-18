@@ -1,8 +1,9 @@
 #!/usr/bin/perl -w
 
-# tokenize_coptic.pl Version 2.0.5
+# tokenize_coptic.pl Version 3.0.0
 
 # this assumes a UTF-8 file with untokenized 'word forms'
+# two files must be present in the tokenizer directory: copt_lex.tab and segmentation_table.tab
 # separated by spaces
 # usage:
 # tokenize_coptic.pl [options] file
@@ -20,7 +21,8 @@ $usage = <<"_USAGE_";
 This script converts characters from one Coptic encoding to another.
 
 Notes and assumptions:
-- ...
+- Two files must be present in the tokenizer directory: copt_lex.tab and segmentation_table.tab
+- Bound groups must be separated in the input file by either spaces or underscores
 
 Usage:  tokenize_coptic.pl [options] <FILE>
 
@@ -39,7 +41,7 @@ Examples:
 Tokenize a Coptic plain text file in UTF-8 encoding (without BOM):
   tokenize_coptic.pl in_Coptic_utf8.txt > out_Coptic_tokenized.txt
 
-Copyright 2013-2014, Amir Zeldes
+Copyright 2013-2015, Amir Zeldes
 
 This program is free software. You may copy or redistribute it under
 the same terms as Perl itself.
@@ -96,6 +98,7 @@ while (<LEX>) {
 	}
 }
 
+
 #add ad hoc stoplist members
 $stoplist{'ϥⲓ'} = 'ϥⲓ;V';
 
@@ -111,6 +114,22 @@ $advlist .="%%%";
 $namelist .="ⲡⲁⲓ|ⲧⲁⲓ|ⲛⲁⲓ|ϭⲉ|%%%";
 }
 ### END LEXICON ###
+
+### PREVIOUS SEGMENTATIONS ###
+#get most frequent previous segmentations from training corpus
+$segfile = "segmentation_table.tab";
+if ($segfile ne "")
+{
+open SEG,"<:encoding(UTF-8)",$segfile or die "could not find segmentation file";
+while (<SEG>) {
+    chomp;
+	if ($_ =~ /^(.*)\t(.*)$/)
+    {
+		$segs{$1} = $2;
+	}
+}
+}
+### END PREVISOUS SEGMENTATIONS ###
 
 # ADD TAG SUPPORT TO LEXICON
 #$namelist =~ s/(.)/$1(?:(?:<[^>]+>)+)?/g;
@@ -153,6 +172,7 @@ while (<FILE>) {
 			print $strCurrentTokens;
 			$strCurrentTokens = "";
 			$strTokenized = &tokenize($word);
+			$subline = &restore_caps($subline);
 			if ($noword == 1) {$subline =~ s/\n*<norm_group[^>]*>\n*//g; print $subline;
 			}
 			else{	 $subline =~ s/\|//g; print $subline ."\n";}
@@ -165,10 +185,11 @@ while (<FILE>) {
 			$strPattern = ($strTokenized);
 			@t = split(/\|/, $strTokenized);
 
+			print "strPattern is initially $strPattern\n";
 			$strPattern =~ s/([\[\]\(\)])/\\$1/g;
 			$strPattern =~ s/([^\\])/$1\#/g;
 			$strPattern =~ s/\|/\)\(/g;
-			$strPattern =~ s/#/(?:(?:[\\ṇ̄︦︤︥̂`̣̇̂̅̈︤︥︦]|<[^>]+>|̣)*)?/g; #allow intervening tags, linebreaks, and Coptic diacritics
+			$strPattern =~ s/#/(?:(?:[\\ṇ̄︦︤︥̂`̣̇̂̅̈︤︥︦]|<[^>]+>|̣|~)*)?/g; #allow intervening tags, linebreaks, capital letter escapes with tilde, and Coptic diacritics
 			$strPattern =~ s/(.*)/(?<!\\")\($1\)/; #negative lookbehind prevents matching tokens within a quoted attribute in an SGML tag
 			$count = () = $strTokenized =~ /\|/g; 
 			if ($strCurrentTokens =~ /$strPattern/){
@@ -181,6 +202,7 @@ while (<FILE>) {
 				elsif ($count==6) {$strCurrentTokens =~ s/$strPattern/<norm norm=\"$t[(1-1)]\">\n$1\n<\/norm>\n<norm norm=\"$t[(2-1)]\">\n$2\n<\/norm>\n<norm norm=\"$t[(3-1)]\">\n$3\n<\/norm>\n<norm norm=\"$t[(4-1)]\">\n$4\n<\/norm>\n<norm norm=\"$t[(5-1)]\">\n$5\n<\/norm>\n<norm norm=\"$t[(6-1)]\">\n$6\n<\/norm>\n<norm norm=\"$t[(7-1)]\">\n$7\n<\/norm>\n/;}
 				elsif ($count==7) {$strCurrentTokens =~ s/$strPattern/<norm norm=\"$t[(1-1)]\">\n$1\n<\/norm>\n<norm norm=\"$t[(2-1)]\">\n$2\n<\/norm>\n<norm norm=\"$t[(3-1)]\">\n$3\n<\/norm>\n<norm norm=\"$t[(4-1)]\">\n$4\n<\/norm>\n<norm norm=\"$t[(5-1)]\">\n$5\n<\/norm>\n<norm norm=\"$t[(6-1)]\">\n$6\n<\/norm>\n<norm norm=\"$t[(7-1)]\">\n$7\n<\/norm>\n<norm norm=\"$t[(8-1)]\">\n$8\n<\/norm>\n/;}
 				elsif ($count==8) {$strCurrentTokens =~ s/$strPattern/<norm norm=\"$t[(1-1)]\">\n$1\n<\/norm>\n<norm norm=\"$t[(2-1)]\">\n$2\n<\/norm>\n<norm norm=\"$t[(3-1)]\">\n$3\n<\/norm>\n<norm norm=\"$t[(4-1)]\">\n$4\n<\/norm>\n<norm norm=\"$t[(5-1)]\">\n$5\n<\/norm>\n<norm norm=\"$t[(6-1)]\">\n$6\n<\/norm>\n<norm norm=\"$t[(7-1)]\">\n$7\n<\/norm>\n<norm norm=\"$t[(8-1)]\">\n$8\n<\/norm>\n<norm norm=\"$t[(9-1)]\">\n$9\n<\/norm>\n/;}
+				$strCurrentTokens = &restore_caps($strCurrentTokens);
 			}
 			else { 
 				if  ($count==0) {
@@ -190,15 +212,9 @@ while (<FILE>) {
 				}
 				else {
 					$strNorms="";
-					#print "\nDEBUG: $strTokenized\n";
 					@subpipes = split('\|',$strTokenized);
 					foreach $subpipe (@subpipes)	{
 					$strNorms .= "<norm norm=\"$subpipe\">\n$subpipe\n</norm>\n";
-					#$strTokenized =~ s/\|([^\|]+)/\n<\/norm>\n<norm norm=\"$1\">\n$1/g;
-					#$flat_word = $strTokenized;
-					#$flat_word = &removexml($flat_word);
-					#$flat_word =~ s/[\n\|]+//g;
-					#$strCurrentTokens = "<norm norm=\"$flat_word\">\n" . $strTokenized . "\n<\/norm>\n";
 					}
 					$strCurrentTokens = $strNorms;
 				}
@@ -246,7 +262,8 @@ while (<FILE>) {
 	{
 		
 		$dipl = $strWord;
-		$strWord =~ s/(̈|%|̄|̣|`|̅|̈|̂|︤|︥|︦)//g; 
+		#$strWord = &encode_caps($strWord);
+		$strWord =~ s/(̈|%|̄|̣|`|̅|̈|̂|︤|︥|︦|~)//g; 
 
 		#remove supralinear strokes and other decorations for tokenization
 		if ($strWord =~ /\|/) #pipes found, assume explicit tokenization is present
@@ -317,6 +334,9 @@ while (<FILE>) {
 
 			#check stoplist
 			elsif (exists $stoplist{$strWord}) {$strWord = $strWord;} 
+
+			#check segmentation file
+			elsif (exists $segs{$strWord}) {$strWord = $segs{$strWord};} 
 			
 			#adverbs
 			elsif ($strWord =~ /^($advlist)$/){$strWord = $1;}
@@ -469,7 +489,7 @@ while (<FILE>) {
 
 		#split off negating TMs
 		if ($strWord=~/\|ⲧⲙ(?!ⲁⲉⲓⲏⲩ|ⲁⲓⲏⲩ|ⲁⲓⲟ|ⲁⲓⲟⲕ|ⲙⲟ|ⲟ$)/) {$strWord =~ s/\|ⲧⲙ/|ⲧⲙ|/;}
-				
+		
 		$strWord;
 	}
 
@@ -491,6 +511,7 @@ sub preprocess{
 	$rawline =~ s/\n$//;
 	$rawline =~ s/%/ /g;
 	$rawline =~ s/@/_/g;
+	$rawline = &encode_caps($rawline);
 	$rawline;
 	
 }
@@ -501,5 +522,73 @@ sub removexml{
 	$input;
 }
 
+sub encode_caps{
+	$input = $_[0];
+	$input =~ s/Ⲁ/ⲁ~/g;
+	$input =~ s/Ⲃ/ⲃ~/g;
+	$input =~ s/Ⲅ/ⲅ~/g;
+	$input =~ s/Ⲇ/ⲇ~/g;
+	$input =~ s/Ⲉ/ⲉ~/g;
+	$input =~ s/Ⲍ/ⲍ~/g;
+	$input =~ s/Ⲏ/ⲏ~/g;
+	$input =~ s/Ⲑ/ⲑ~/g;
+	$input =~ s/Ⲓ/ⲓ~/g;
+	$input =~ s/Ⲕ/ⲕ~/g;
+	$input =~ s/Ⲗ/ⲗ~/g;
+	$input =~ s/Ⲙ/ⲙ~/g;
+	$input =~ s/Ⲛ/ⲛ~/g;
+	$input =~ s/Ⲟ/ⲟ~/g;
+	$input =~ s/Ⲝ/ⲝ~/g;
+	$input =~ s/Ⲡ/ⲡ~/g;
+	$input =~ s/Ⲣ/ⲣ~/g;
+	$input =~ s/Ⲥ/ⲥ~/g;
+	$input =~ s/Ⲧ/ⲧ~/g;
+	$input =~ s/Ⲩ/ⲩ~/g;
+	$input =~ s/Ⲭ/ⲭ~/g;
+	$input =~ s/Ⲯ/ⲯ~/g;
+	$input =~ s/Ⲫ/ⲫ~/g;
+	$input =~ s/Ⲱ/ⲱ~/g;
+	$input =~ s/Ϭ/ϭ~/g;
+	$input =~ s/Ϩ/ϩ~/g;
+	$input =~ s/Ϥ/ϥ~/g;
+	$input =~ s/Ϫ/ϫ~/g;
+	$input =~ s/Ϣ/ϣ~/g;
+	$input =~ s/Ϯ/ϯ~/g;
+	$input;
+}
 
+sub restore_caps{
+	$input = $_[0];
+	$input =~ s/ⲁ~/Ⲁ/g;
+	$input =~ s/ⲃ~/Ⲃ/g;
+	$input =~ s/ⲅ~/Ⲅ/g;
+	$input =~ s/ⲇ~/Ⲇ/g;
+	$input =~ s/ⲉ~/Ⲉ/g;
+	$input =~ s/ⲍ~/Ⲍ/g;
+	$input =~ s/ⲏ~/Ⲏ/g;
+	$input =~ s/ⲑ~/Ⲑ/g;
+	$input =~ s/ⲓ~/Ⲓ/g;
+	$input =~ s/ⲕ~/Ⲕ/g;
+	$input =~ s/ⲗ~/Ⲗ/g;
+	$input =~ s/ⲙ~/Ⲙ/g;
+	$input =~ s/ⲛ~/Ⲛ/g;
+	$input =~ s/ⲟ~/Ⲟ/g;
+	$input =~ s/ⲝ~/Ⲝ/g;
+	$input =~ s/ⲡ~/Ⲡ/g;
+	$input =~ s/ⲣ~/Ⲣ/g;
+	$input =~ s/ⲥ~/Ⲥ/g;
+	$input =~ s/ⲧ~/Ⲧ/g;
+	$input =~ s/ⲩ~/Ⲩ/g;
+	$input =~ s/ⲭ~/Ⲭ/g;
+	$input =~ s/ⲯ~/Ⲯ/g;
+	$input =~ s/ⲫ~/Ⲫ/g;
+	$input =~ s/ⲱ~/Ⲱ/g;
+	$input =~ s/ϭ~/Ϭ/g;
+	$input =~ s/ϩ~/Ϩ/g;
+	$input =~ s/ϥ~/Ϥ/g;
+	$input =~ s/ϫ~/Ϫ/g;
+	$input =~ s/ϣ~/Ϣ/g;
+	$input =~ s/ϯ~/Ϯ/g;
+	$input;
+}
 
