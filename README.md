@@ -38,9 +38,10 @@ Examples:
 Tokenize a Coptic plain text file in UTF-8 encoding (without BOM):
   tokenize_coptic.pl in_Coptic_utf8.txt > out_Coptic_tokenized.txt
   
-v2.0.1 adds the -l parameter, which allows tokenization of text that breaks across lines (as in a diplomatic transcription of a manuscript)
+v2.X.X adds the -l parameter, which allows tokenization of text that breaks across lines (as in a diplomatic transcription of a manuscript)
+v3.X.X adds a file with most frequently used previous segmentations called segmentation_table.tab. This file should be in the same directory as the tokenizer and the lexicon file, copt_lex.tab.
 
-Copyright 2013-2014, Amir Zeldes
+Copyright 2013-2015, Amir Zeldes
 
 This program is free software. You may copy or redistribute it under
 the same terms as Perl itself.
