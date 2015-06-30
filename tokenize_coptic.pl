@@ -262,7 +262,7 @@ while (<FILE>) {
 		
 		$dipl = $strWord;
 		#$strWord = &encode_caps($strWord);
-		$strWord =~ s/(̈|%|̄|̣|`|̅|̈|̂|︤|︥|︦|~)//g; 
+		$strWord =~ s/(̈|%|̄|̇|̣|`|̅|̈|̂|︤|︥|︦|~)//g; 
 
 		#remove supralinear strokes and other decorations for tokenization
 		if ($strWord =~ /\|/) #pipes found, assume explicit tokenization is present
