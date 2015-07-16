@@ -149,7 +149,7 @@ while (<FILE>) {
 	}
 	else
 	{
-			$line .= "<line>". $input ."</line>";
+		$line .= "<line>". $input ."</line>";
 	}
 }
 	
