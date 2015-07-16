@@ -1,0 +1,158 @@
+<norm_group norm_group="ⲛⲐⲉ">
+<norm norm="ⲛ">
+ⲛ
+</norm>
+<norm norm="ⲧ">
+ⲧ
+</norm>
+<norm norm="ϩⲉ">
+ϩⲉ
+</norm>
+</norm_group> 
+<norm_group norm_group="ⲑⲓⲘⲉ">
+<norm norm="ⲧ">
+ⲧ
+</norm>
+<norm norm="ϩⲓⲙⲉ">
+ϩⲓⲙⲉ
+</norm>
+</norm_group> 
+<norm_group norm_group="ⲡⲢⲰⲙⲉ">
+<norm norm="ⲡ">
+ⲡ
+</norm>
+<norm norm="ⲣⲱⲙⲉ">
+ⲢⲰⲙⲉ
+</norm>
+</norm_group> 
+<norm_group norm_group="ⲛⲑⲉ">
+<norm norm="ⲛ">
+ⲛ
+</norm>
+<norm norm="ⲧ">
+ⲧ
+</norm>
+<norm norm="ϩⲉ">
+ϩⲉ
+</norm>
+</norm_group> 
+<norm_group norm_group="ⲑⲓⲙⲉ">
+<norm norm="ⲧ">
+ⲧ
+</norm>
+<norm norm="ϩⲓⲙⲉ">
+ϩⲓⲙⲉ
+</norm>
+</norm_group> 
+<norm_group norm_group="ⲡⲣⲱⲙⲉ">
+<norm norm="ⲡ">
+ⲡ
+</norm>
+<norm norm="ⲣⲱⲙⲉ">
+ⲣⲱⲙⲉ
+</norm>
+</norm_group> 
+<norm_group norm_group="ⲉⲑⲏⲡ">
+<norm norm="ⲉⲧ">
+ⲉⲧ
+</norm>
+<norm norm="ϩⲏⲡ">
+ϩⲏⲡ
+</norm>
+</norm_group> 
+<norm_group norm_group="ⲉⲑⲏϣ">
+<norm norm="ⲉⲧ">
+ⲉⲧ
+</norm>
+<norm norm="ϩⲏϣ">
+ϩⲏϣ
+</norm>
+</norm_group> 
+<norm_group norm_group="ⲛⲉⲑⲟⲟⲩ">
+<norm norm="ⲛ">
+ⲛ
+</norm>
+<norm norm="ⲉⲧ">
+ⲉⲧ
+</norm>
+<norm norm="ϩⲟⲟⲩ">
+ϩⲟⲟⲩ
+</norm>
+</norm_group> 
+<norm_group norm_group="ⲉⲛⲧⲁⲩⲧⲁⲁⲥ">
+<norm norm="ⲉⲛⲧ">
+ⲉⲛⲧ
+</norm>
+<norm norm="ⲁ">
+ⲁ
+</norm>
+<norm norm="ⲩ">
+ⲩ
+</norm>
+<norm norm="ⲧⲁⲁ">
+ⲧⲁⲁ
+</norm>
+<norm norm="ⲥ">
+ⲥ
+</norm>
+</norm_group> 
+<norm_group norm_group="ⲉⲧⲙⲧⲣⲉⲧⲛϣⲱⲱⲧ">
+<norm norm="ⲉ">
+ⲉ
+</norm>
+<norm norm="ⲧⲙ">
+ⲧⲙ
+</norm>
+<norm norm="">
+</norm>
+<norm norm="ⲧⲣⲉ">
+ⲧⲣⲉ
+</norm>
+<norm norm="ⲧⲛ">
+ⲧⲛ
+</norm>
+<norm norm="ϣⲱⲱⲧ">
+ϣⲱⲱⲧ
+</norm>
+</norm_group> 
+<norm_group norm_group="ⲉⲧⲉⲧⲛϭⲱϣⲧ">
+<norm norm="ⲉ">
+ⲉ
+</norm>
+<norm norm="ⲧⲉⲧⲛ">
+ⲧⲉⲧⲛ
+</norm>
+<norm norm="ϭⲱϣⲧ">
+ϭⲱϣⲧ
+</norm>
+</norm_group> 
+<norm_group norm_group="ⲉⲧⲉⲧⲛϫⲏⲕ">
+<norm norm="ⲉ">
+ⲉ
+</norm>
+<norm norm="ⲧⲉⲧⲛ">
+ⲧⲉⲧⲛ
+</norm>
+<norm norm="ϫⲏⲕ">
+ϫⲏⲕ
+</norm>
+</norm_group> 
+<norm_group norm_group="ⲙⲛϯⲅⲛⲱⲙⲏ">
+<norm norm="ⲙⲛ">
+ⲙⲛ
+</norm>
+<norm norm="ϯ">
+ϯ
+</norm>
+<norm norm="ⲅⲛⲱⲙⲏ">
+ⲅⲛⲱⲙⲏ
+</norm>
+</norm_group> 
+<norm_group norm_group="ⲉⲧⲙⲙⲁⲩ">
+<norm norm="ⲉⲧ">
+ⲉⲧ
+</norm>
+<norm norm="ⲙⲙⲁⲩ">
+ⲙⲙⲁⲩ
+</norm>
+</norm_group>
