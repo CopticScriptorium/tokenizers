@@ -1,8 +1,0 @@
-<norm_group norm_group="ⲉⲧⲃⲉⲡⲁⲓ">
-<norm norm="ⲉⲧⲃⲉ">
-ⲉⲧⲃⲉ
-</norm>
-<norm norm="ⲡⲁⲓ">
-ⲡⲁⲓ
-</norm>
-</norm_group>
