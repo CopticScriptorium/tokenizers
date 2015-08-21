@@ -1,10 +1,10 @@
 #!/usr/bin/perl -w
 
-# tokenize_coptic.pl Version 3.1.1
+# tokenize_coptic.pl Version 3.2.0
 
-# this assumes a UTF-8 file with untokenized 'word forms'
-# two files must be present in the tokenizer directory: copt_lex.tab and segmentation_table.tab
-# separated by spaces
+# this assumes a UTF-8 file with untokenized 'word forms' separated by spaces or underscores
+# two files must be present in the tokenizer directory or specified via options: copt_lex.tab and segmentation_table.tab
+# 
 # usage:
 # tokenize_coptic.pl [options] file
 # See help (-h) for options
@@ -29,6 +29,8 @@ Usage:  tokenize_coptic.pl [options] <FILE>
 Options and argument:
 
 -h              print this [h]elp message and quit
+-d              specify [d]ictionary file, default is copt_lex.tab in script directory
+-s              specify [s]egmentation file, default is segmentation_table.tab in script directory
 -p              output [p]ipe separated word forms instead of tokens in separate lines wrapped by <norm> tags
 -l               add [l]ine tags marking original linebreaks in input file
 -n              [n]o output of word forms in <norm_group> elements before the set of tokens extracted from each group
@@ -50,7 +52,7 @@ _USAGE_
 
 ### OPTIONS BEGIN ###
 %opts = ();
-getopts('hlnp',\%opts) or die $usage;
+getopts('hlnpd:s:',\%opts) or die $usage;
 
 #help
 if ($opts{h} || (@ARGV == 0)) {
@@ -60,6 +62,10 @@ if ($opts{h} || (@ARGV == 0)) {
 if ($opts{p})   {$pipes = 1;} else {$pipes = 0;}
 if ($opts{l})   {$nolines = 0;} else {$nolines = 1;}
 if ($opts{n})   {$noword = 1;} else {$noword = 0;}
+if (!($lexicon = $opts{d})) 
+    {$lexicon = "copt_lex.tab";}
+if (!($segfile = $opts{s})) 
+    {$segfile  = "segmentation_table.tab";}
 
 ### OPTIONS END ###
 
@@ -79,7 +85,6 @@ $bibase = "ϯ|ⲧⲉ|ⲕ|ϥ|ⲥ|ⲧⲛ|ⲧⲉⲧⲛ|ⲥⲉ";
 $exist = "ⲟⲩⲛ|ⲙⲛ";
 
 #get external open class lexicon
-$lexicon = "copt_lex.tab";
 if ($lexicon ne "")
 {
 open LEX,"<:encoding(UTF-8)",$lexicon or die "could not find lexicon file";
@@ -117,7 +122,6 @@ $namelist .="ⲡⲁⲓ|ⲧⲁⲓ|ⲛⲁⲓ|ϭⲉ|%%%";
 
 ### PREVIOUS SEGMENTATIONS ###
 #get most frequent previous segmentations from training corpus
-$segfile = "segmentation_table.tab";
 if ($segfile ne "")
 {
 open SEG,"<:encoding(UTF-8)",$segfile or die "could not find segmentation file";
@@ -137,7 +141,8 @@ while (<SEG>) {
 open FILE,"<:encoding(UTF-8)",shift or die "could not find input document";
 $preFirstWord = 1;
 $strCurrentTokens = "";
-
+$strOutput ="";
+$strOutput ="";
 while (<FILE>) {
 
     chomp;
@@ -160,22 +165,25 @@ while (<FILE>) {
 
 	@sublines = split("\n+",$line);
 	foreach $subline (@sublines)	{
+
 		if ($subline =~ /<norm_group norm_group=\"([^\"]+)\">/) {
 			#bound groups begins, tokenize full form from element attribute
+			
 			if ($preFirstWord == 1)
 			{
-				print $strCurrentTokens;
+				$strOutput .= $strCurrentTokens;
 				$strCurrentTokens = "";
 				$preFirstWord=0;
 			}
 			$word = $1;
-			print $strCurrentTokens;
+			$strOutput .= $strCurrentTokens;
 			$strCurrentTokens = "";
 			$strTokenized = &tokenize($word);
 			$subline = &restore_caps($subline);
-			if ($noword == 1) {$subline =~ s/\n*<norm_group[^>]*>\n*//g; print $subline;
+			
+			if ($noword == 1) {$subline =~ s/\n*<norm_group[^>]*>\n*//g; $strOutput .= $subline;
 			}
-			else{	 $subline =~ s/\|//g; print $subline ."\n";}
+			else{	 $subline =~ s/\|//g; $strOutput .= $subline ."\n";}
 			
 		}
 		elsif ($subline eq "</norm_group>"){
@@ -186,11 +194,15 @@ while (<FILE>) {
 			@t = split(/\|/, $strTokenized);
 
 			$strPattern =~ s/([\[\]\(\)])/\\$1/g;
-			$strPattern =~ s/([^\\])/$1\#/g;
+			$strPattern =~ s/([^\\\|\n\r])/$1#/g;
 			$strPattern =~ s/\|/\)\(/g;
-			$strPattern =~ s/#/(?:(?:[\\ṇ̄︦︤︥̀̂`⳿̣̂̅̈︤︥︦]|<[^>]+>|̣|~)*)?/g; #allow intervening tags, linebreaks, capital letter escapes with tilde, and Coptic diacritics
-			$strPattern =~ s/(.*)/(?<!\\")\($1\)/; #negative lookbehind prevents matching tokens within a quoted attribute in an SGML tag
+			$strPattern =~ s'#'(?:(?:[\r\\ṇ̄︦︤︥̀̂`⳿̣̂̅̈︤︦]|<[^>]+>|̣|~)*)?'g; #allow intervening tags, linebreaks, capital letter escapes with tilde, square brackets and Coptic diacritics
+			$strPattern = join '','(?<!\\")(' , $strPattern , ')'; #negative lookbehind prevents matching tokens within a quoted attribute in an SGML tag
+			$strPattern =~ s/\n*$//; #strip pattern 
+			$strPattern =~ s/^\n*//;
+			$strPattern =~ s/[\r]*//; #don't allow carriage returns anywhere
 			$count = () = $strTokenized =~ /\|/g; 
+
 			if ($strCurrentTokens =~ /$strPattern/){
 				if ($count==0) {$strCurrentTokens =~ s/$strPattern/<norm norm=\"$t[(1-1)]\">\n$1\n<\/norm>\n/;}
 				elsif ($count==1) {$strCurrentTokens =~ s/$strPattern/<norm norm=\"$t[0]\">\n$1\n<\/norm>\n<norm norm=\"$t[1]\">\n$2\n<\/norm>\n/;}
@@ -202,6 +214,7 @@ while (<FILE>) {
 				elsif ($count==7) {$strCurrentTokens =~ s/$strPattern/<norm norm=\"$t[(1-1)]\">\n$1\n<\/norm>\n<norm norm=\"$t[(2-1)]\">\n$2\n<\/norm>\n<norm norm=\"$t[(3-1)]\">\n$3\n<\/norm>\n<norm norm=\"$t[(4-1)]\">\n$4\n<\/norm>\n<norm norm=\"$t[(5-1)]\">\n$5\n<\/norm>\n<norm norm=\"$t[(6-1)]\">\n$6\n<\/norm>\n<norm norm=\"$t[(7-1)]\">\n$7\n<\/norm>\n<norm norm=\"$t[(8-1)]\">\n$8\n<\/norm>\n/;}
 				elsif ($count==8) {$strCurrentTokens =~ s/$strPattern/<norm norm=\"$t[(1-1)]\">\n$1\n<\/norm>\n<norm norm=\"$t[(2-1)]\">\n$2\n<\/norm>\n<norm norm=\"$t[(3-1)]\">\n$3\n<\/norm>\n<norm norm=\"$t[(4-1)]\">\n$4\n<\/norm>\n<norm norm=\"$t[(5-1)]\">\n$5\n<\/norm>\n<norm norm=\"$t[(6-1)]\">\n$6\n<\/norm>\n<norm norm=\"$t[(7-1)]\">\n$7\n<\/norm>\n<norm norm=\"$t[(8-1)]\">\n$8\n<\/norm>\n<norm norm=\"$t[(9-1)]\">\n$9\n<\/norm>\n/;}
 				$strCurrentTokens = &restore_caps($strCurrentTokens);
+				
 			}
 			else { 
 				if  ($count==0) {
@@ -210,6 +223,7 @@ while (<FILE>) {
 					$strCurrentTokens =  "<norm norm=\"$flat_word\" warning=\"no pattern match for token\">\n" . $strCurrentTokens . "\n</norm>\n"; #no match for pattern
 				}
 				else {
+
 					$strNorms="";
 					@subpipes = split('\|',$strTokenized);
 					foreach $subpipe (@subpipes)	{
@@ -229,14 +243,14 @@ while (<FILE>) {
 				$strCurrentTokens =~ s/\|/\n/g;
 			}
 			$strCurrentTokens =~ s/\n+/\n/g;
-			print $strCurrentTokens;
+			$strOutput .= $strCurrentTokens;
 			$strCurrentTokens = "";
 			if ($noword == 1) {$subline =~ s/\n*<\/?norm_group[^>]*>\n*//g;}
-			print $subline ;
+			$strOutput .= $subline ;
 		}
-		elsif ($subline =~ /<.*>/) {
+		elsif ($subline =~ m/<.*>/) {
 			#other SGML tag, just save it
-			$strCurrentTokens .= $subline ."\n";
+			$strCurrentTokens .= $subline ."\n";			
 		}
 		else
 		{
@@ -244,7 +258,9 @@ while (<FILE>) {
 			$strCurrentTokens .= $subline ."\n";		
 		}
 	}
- 
+
+	$strOutput = &orderSGML($strOutput);
+	print $strOutput;
 
 	sub tokenize{
 	$strWord = $_[0];
@@ -253,7 +269,7 @@ while (<FILE>) {
 	if ($strWord =~ /<.+>/)
 	{
 		$strWord =~ s/@/ /g;
-		print "$strWord\n"; #XML tag
+		$strOutput .= "$strWord\n"; #XML tag
 	}
 	elsif ($strWord eq ""){ #do nothing
 	}
@@ -262,7 +278,7 @@ while (<FILE>) {
 		
 		$dipl = $strWord;
 		#$strWord = &encode_caps($strWord);
-		$strWord =~ s/(̈|%|̄|̀|̣|`|̅|̈|̂|︤|︥|︦|⳿|~)//g; 
+		$strWord =~ s/(̈|%|̄|̀|̣|`|̅|̈|̂|︤|︥|︦|⳿|~|\[|\])//g; 
 
 		#remove supralinear strokes and other decorations for tokenization
 		if ($strWord =~ /\|/) #pipes found, assume explicit tokenization is present
@@ -542,7 +558,7 @@ while (<FILE>) {
 			#}	
 
 		#split off negating TMs
-		if ($strWord=~/\|ⲧⲙ(?!ⲁⲉⲓⲏⲩ|ⲁⲓⲏⲩ|ⲁⲓⲟ|ⲁⲓⲟⲕ|ⲙⲟ|ⲟ$)/) {$strWord =~ s/\|ⲧⲙ/|ⲧⲙ|/;}
+		if ($strWord=~/\|ⲧⲙ(?!ⲁⲉⲓⲏⲩ|ⲁⲓⲏⲩ|ⲁⲓⲟ|ⲁⲓⲟⲕ|ⲙⲟ|ⲟ$|\|)/) {$strWord =~ s/\|ⲧⲙ/|ⲧⲙ|/;}
 		
 		$strWord;
 	}
@@ -646,3 +662,55 @@ sub restore_caps{
 	$input;
 }
 
+sub orderSGML{
+	$input = $_[0];
+	@lines = split("\n",$input);
+	foreach $line (@lines)	{
+		
+		if ($line =~ m/(<\/([^>]+)>)/) { # Closing tag
+			if (!(exists $closers{$2})){$closers{$2} = $1;}
+			else{$closers{$2} = $1}
+		}
+		elsif ($line =~ m/(<([^> ]+)[^>]*>)/) { # Opening tag
+			if (!(exists $openers{$2})){$openers{$2} = $1;}
+			else{$openers{$2} = $1}
+		}
+		else { # Token - flush opening and closing tags in order
+		&flush_tags(\%closers,"close");
+		&flush_tags(\%openers,"open");
+		print "$line\n";
+		undef %openers;
+		undef %closers;
+		}
+	}
+
+	&flush_tags(\%closers,"close");
+}
+
+sub flush_tags{
+	@priorities = ('pb','cb','line','norm_group','norm','gap','hi','m');
+	my %tags =  %{$_[0]};
+	$close = $_[1];
+	if ($close eq "close"){
+		@priorities = reverse @priorities;
+			foreach my $key ( sort keys %tags )	{
+				if (!( $key ~~ @priorities)){
+					print "$tags{$key}\n";
+				}
+			}
+		}
+	foreach $priority (@priorities){
+		if (exists $tags{$priority}){
+			@prio_tags = split(",",$tags{$priority});
+			foreach $tag (@prio_tags){
+				print "$tag\n";
+			}
+		}
+		delete $tags{$priority};
+	}
+	if ($close eq "open"){
+		foreach my $key ( sort {$b cmp $a} keys %tags )	{
+			print "$tags{$key}\n";
+		}
+	}
+}
