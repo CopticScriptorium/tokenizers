@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# tokenize_coptic.pl Version 3.2.1
+# tokenize_coptic.pl Version 3.2.2
 
 # this assumes a UTF-8 file with untokenized 'word forms' separated by spaces or underscores
 # two files must be present in the tokenizer directory or specified via options: copt_lex.tab and segmentation_table.tab
@@ -167,7 +167,7 @@ while (<FILE>) {
 	foreach $subline (@sublines)	{
 
 		if ($subline =~ /<norm_group norm_group=\"([^\"]+)\">/) {
-			#bound groups begins, tokenize full form from element attribute
+			#bound group begins, tokenize full form from element attribute
 			
 			if ($preFirstWord == 1)
 			{
@@ -258,7 +258,6 @@ while (<FILE>) {
 			$strCurrentTokens .= $subline ."\n";		
 		}
 	}
-
 	$strOutput = &orderSGML($strOutput);
 	print $strOutput;
 
@@ -593,7 +592,7 @@ while (<FILE>) {
 sub preprocess{
 
 	$rawline = $_[0];
-	$rawline =~ s/([^<  ]+) (?=[^<>]*>)/$1%/g;
+	$rawline =~ s/([^< ]+) (?=[^<>]*>)/$1%/g;
 	$rawline =~ s/([^<_]+)_(?=[^<>]*>)/$1@/g;
 	$rawline =~ s/_/ /g;	
 	$rawline =~ s/ +/ /g;	
@@ -690,7 +689,6 @@ sub orderSGML{
 	$input = $_[0];
 	@lines = split("\n",$input);
 	foreach $line (@lines)	{
-		
 		if ($line =~ m/(<\/([^>]+)>)/) { # Closing tag
 			if (!(exists $closers{$2})){$closers{$2} = $1;}
 			else{$closers{$2} = $1}
@@ -725,10 +723,7 @@ sub flush_tags{
 		}
 	foreach $priority (@priorities){
 		if (exists $tags{$priority}){
-			@prio_tags = split(",",$tags{$priority});
-			foreach $tag (@prio_tags){
-				print "$tag\n";
-			}
+			print $tags{$priority}."\n";
 		}
 		delete $tags{$priority};
 	}
