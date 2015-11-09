@@ -1,9 +1,9 @@
 #!/usr/bin/perl -w
 
-# tokenize_coptic.pl Version 3.2.2
+# tokenize_coptic.pl Version 4.0.1
 
 # this assumes a UTF-8 file with untokenized 'word forms' separated by spaces or underscores
-# two files must be present in the tokenizer directory or specified via options: copt_lex.tab and segmentation_table.tab
+# three files must be present in the tokenizer directory or specified via options: copt_lex.tab, segmentation_table.tab and morph_table.tab
 # 
 # usage:
 # tokenize_coptic.pl [options] file
@@ -18,11 +18,8 @@ binmode(STDIN, ":utf8");
 my $usage;
 {
 $usage = <<"_USAGE_";
-This script converts characters from one Coptic encoding to another.
-
-Notes and assumptions:
-- Two files must be present in the tokenizer directory: copt_lex.tab and segmentation_table.tab
-- Bound groups must be separated in the input file by either spaces or underscores
+This script splits up Coptic bound groups and assumes a UTF-8 file with untokenized groups of characters separated by spaces or underscores
+Three files must be present in the tokenizer directory or specified via options: copt_lex.tab, segmentation_table.tab and morph_table.tab
 
 Usage:  tokenize_coptic.pl [options] <FILE>
 
@@ -31,6 +28,7 @@ Options and argument:
 -h              print this [h]elp message and quit
 -d              specify [d]ictionary file, default is copt_lex.tab in script directory
 -s              specify [s]egmentation file, default is segmentation_table.tab in script directory
+-m              specify [m]orph table file, default is morph_table.tab in script directory
 -p              output [p]ipe separated word forms instead of tokens in separate lines wrapped by <norm> tags
 -l               add [l]ine tags marking original linebreaks in input file
 -n              [n]o output of word forms in <norm_group> elements before the set of tokens extracted from each group
@@ -52,7 +50,7 @@ _USAGE_
 
 ### OPTIONS BEGIN ###
 %opts = ();
-getopts('hlnpd:s:',\%opts) or die $usage;
+getopts('hlm:npd:s:',\%opts) or die $usage;
 
 #help
 if ($opts{h} || (@ARGV == 0)) {
@@ -66,6 +64,8 @@ if (!($lexicon = $opts{d}))
     {$lexicon = "copt_lex.tab";}
 if (!($segfile = $opts{s})) 
     {$segfile  = "segmentation_table.tab";}
+if (!($morphfile = $opts{m})) 
+    {$morphfile = "morph_table.tab";}
 
 ### OPTIONS END ###
 
@@ -133,10 +133,24 @@ while (<SEG>) {
 	}
 }
 }
+#get most frequent previous morphological analyses from training corpus
+if ($morphfile ne "")
+{
+open MORPH,"<:encoding(UTF-8)",$morphfile or die "could not find segmentation file";
+while (<MORPH>) {
+    chomp;
+	if ($_ =~ /^(.*)\t(.*)$/)
+    {
+		$morphs{$1} = $2;
+	}
+}
+}
 ### END PREVISOUS SEGMENTATIONS ###
 
 # ADD TAG SUPPORT TO LEXICON
-#$namelist =~ s/(.)/$1(?:(?:<[^>]+>)+)?/g;
+
+#Global to flag theta fixing
+$fix_theta_group = 0;
 
 open FILE,"<:encoding(UTF-8)",shift or die "could not find input document";
 $preFirstWord = 1;
@@ -176,67 +190,41 @@ while (<FILE>) {
 				$preFirstWord=0;
 			}
 			$word = $1;
-			$strOutput .= $strCurrentTokens;
-			$strCurrentTokens = "";
+			
 			$strTokenized = &tokenize($word);
 			$subline = &restore_caps($subline);
+			$strOutput .= $strCurrentTokens;
+			$strCurrentTokens = "";
 			
 			if ($noword == 1) {$subline =~ s/\n*<norm_group[^>]*>\n*//g; $strOutput .= $subline;
 			}
 			else{	 $subline =~ s/\|//g; $strOutput .= $subline ."\n";}
-			
 		}
 		elsif ($subline eq "</norm_group>"){
 			#bound group ends, flush tags and output resegmented tokens
 				#search for morphemes to add
 
-			$strPattern = ($strTokenized);
-			@t = split(/\|/, $strTokenized);
-
-			$strPattern =~ s/([\[\]\(\)])/\\$1/g;
-			$strPattern =~ s/([^\\\|\n\r])/$1#/g;
-			$strPattern =~ s/\|/\)\(/g;
-			$strPattern =~ s'#'(?:(?:[\r\\ṇ̄︦︤︥̀̂`⳿̣̂̅̈︤︦]|<[^>]+>|̣|~)*)?'g; #allow intervening tags, linebreaks, capital letter escapes with tilde, square brackets and Coptic diacritics
-			$strPattern = join '','(?<!\\")(' , $strPattern , ')'; #negative lookbehind prevents matching tokens within a quoted attribute in an SGML tag
-			$strPattern =~ s/\n*$//; #strip pattern 
-			$strPattern =~ s/^\n*//;
-			$strPattern =~ s/[\r]*//; #don't allow carriage returns anywhere
-			$count = () = $strTokenized =~ /\|/g; 
-
-			if ($strCurrentTokens =~ /$strPattern/){
-				if ($count==0) {$strCurrentTokens =~ s/$strPattern/<norm norm=\"$t[(1-1)]\">\n$1\n<\/norm>\n/;}
-				elsif ($count==1) {$strCurrentTokens =~ s/$strPattern/<norm norm=\"$t[0]\">\n$1\n<\/norm>\n<norm norm=\"$t[1]\">\n$2\n<\/norm>\n/;}
-				elsif ($count==2) {$strCurrentTokens =~ s/$strPattern/<norm norm=\"$t[(1-1)]\">\n$1\n<\/norm>\n<norm norm=\"$t[(2-1)]\">\n$2\n<\/norm>\n<norm norm=\"$t[(3-1)]\">\n$3\n<\/norm>\n/;}
-				elsif ($count==3) {$strCurrentTokens =~ s/$strPattern/<norm norm=\"$t[(1-1)]\">\n$1\n<\/norm>\n<norm norm=\"$t[(2-1)]\">\n$2\n<\/norm>\n<norm norm=\"$t[(3-1)]\">\n$3\n<\/norm>\n<norm norm=\"$t[(4-1)]\">\n$4\n<\/norm>\n/;}
-				elsif ($count==4) {$strCurrentTokens =~ s/$strPattern/<norm norm=\"$t[(1-1)]\">\n$1\n<\/norm>\n<norm norm=\"$t[(2-1)]\">\n$2\n<\/norm>\n<norm norm=\"$t[(3-1)]\">\n$3\n<\/norm>\n<norm norm=\"$t[(4-1)]\">\n$4\n<\/norm>\n<norm norm=\"$t[(5-1)]\">\n$5\n<\/norm>\n/;}
-				elsif ($count==5) {$strCurrentTokens =~ s/$strPattern/<norm norm=\"$t[(1-1)]\">\n$1\n<\/norm>\n<norm norm=\"$t[(2-1)]\">\n$2\n<\/norm>\n<norm norm=\"$t[(3-1)]\">\n$3\n<\/norm>\n<norm norm=\"$t[(4-1)]\">\n$4\n<\/norm>\n<norm norm=\"$t[(5-1)]\">\n$5\n<\/norm>\n<norm norm=\"$t[(6-1)]\">\n$6\n<\/norm>\n/;}
-				elsif ($count==6) {$strCurrentTokens =~ s/$strPattern/<norm norm=\"$t[(1-1)]\">\n$1\n<\/norm>\n<norm norm=\"$t[(2-1)]\">\n$2\n<\/norm>\n<norm norm=\"$t[(3-1)]\">\n$3\n<\/norm>\n<norm norm=\"$t[(4-1)]\">\n$4\n<\/norm>\n<norm norm=\"$t[(5-1)]\">\n$5\n<\/norm>\n<norm norm=\"$t[(6-1)]\">\n$6\n<\/norm>\n<norm norm=\"$t[(7-1)]\">\n$7\n<\/norm>\n/;}
-				elsif ($count==7) {$strCurrentTokens =~ s/$strPattern/<norm norm=\"$t[(1-1)]\">\n$1\n<\/norm>\n<norm norm=\"$t[(2-1)]\">\n$2\n<\/norm>\n<norm norm=\"$t[(3-1)]\">\n$3\n<\/norm>\n<norm norm=\"$t[(4-1)]\">\n$4\n<\/norm>\n<norm norm=\"$t[(5-1)]\">\n$5\n<\/norm>\n<norm norm=\"$t[(6-1)]\">\n$6\n<\/norm>\n<norm norm=\"$t[(7-1)]\">\n$7\n<\/norm>\n<norm norm=\"$t[(8-1)]\">\n$8\n<\/norm>\n/;}
-				elsif ($count==8) {$strCurrentTokens =~ s/$strPattern/<norm norm=\"$t[(1-1)]\">\n$1\n<\/norm>\n<norm norm=\"$t[(2-1)]\">\n$2\n<\/norm>\n<norm norm=\"$t[(3-1)]\">\n$3\n<\/norm>\n<norm norm=\"$t[(4-1)]\">\n$4\n<\/norm>\n<norm norm=\"$t[(5-1)]\">\n$5\n<\/norm>\n<norm norm=\"$t[(6-1)]\">\n$6\n<\/norm>\n<norm norm=\"$t[(7-1)]\">\n$7\n<\/norm>\n<norm norm=\"$t[(8-1)]\">\n$8\n<\/norm>\n<norm norm=\"$t[(9-1)]\">\n$9\n<\/norm>\n/;}
-				$strCurrentTokens = &restore_caps($strCurrentTokens);
-				
-			}
-			else { 
-				if  ($count==0) {
-					$flat_word = $word;
-					$flat_word =~ s/[\n\|]+//g;
-					$strCurrentTokens =  "<norm norm=\"$flat_word\" warning=\"no pattern match for token\">\n" . $strCurrentTokens . "\n</norm>\n"; #no match for pattern
+			$strCurrentTokens = &align($strCurrentTokens,$strTokenized,"norm");
+			@norms =  ( $strCurrentTokens =~ /norm=\"([^\"]+)\"/g );
+			$strMorphed = "";
+			foreach $norm (@norms){
+				$analysis = &morph_analyze($norm);
+				if ($analysis =~ m/\|/){
+					$strMorphed .= "|" . $analysis . "|";
 				}
-				else {
-
-					$strNorms="";
-					@subpipes = split('\|',$strTokenized);
-					foreach $subpipe (@subpipes)	{
-					$strNorms .= "<norm norm=\"$subpipe\">\n$subpipe\n</norm>\n";
-					}
-					$strCurrentTokens = $strNorms;
-				}
+				$strMorphed =~ s/\|+/\|/g;
 			}
-			$strCurrentTokens =~ s/\n+/\n/g;
+			$strMorphed =~ s/^\|//;
+			$strMorphed =~ s/\|$//;
+
+			$strCurrentTokens = &align($strCurrentTokens,$strMorphed,"morph");
+
 			if ($pipes == 1)
 			{
 				$strCurrentTokens =~ s/\n<\/norm>\n<norm[^>]*>\n/|/g;
 				$strCurrentTokens =~ s/<\/?norm[^>]*>\n//g;
+				$strCurrentTokens =~ s/\n<\/morph>\n<morph[^>]*>\n/-/g;
+				$strCurrentTokens =~ s/<\/?morph[^>]*>\n//g;
 			}
 			else
 			{
@@ -247,15 +235,31 @@ while (<FILE>) {
 			$strCurrentTokens = "";
 			if ($noword == 1) {$subline =~ s/\n*<\/?norm_group[^>]*>\n*//g;}
 			$strOutput .= $subline ;
+			if ($fix_theta_group==1){
+				if ($strOutput =~ /.*<norm_group norm_group="([^"]*ⲑ[^"]*)"/ms){
+					$orig_group = $1;
+				}
+				$strOutput =~ s/(.*<norm_group norm_group="[^"]*)ⲑ([^"]*")/$1ⲧϩ$2/ms;
+				if ($strOutput =~ /.*<norm_group norm_group="([^"]+)"/ms){
+					$last_norm_group = $1;
+				}
+				if ($last_norm_group =~ /(̈|%|̄|̀|̣|`|̅|̈|̂|︤|︥|︦|⳿|~|\[|\])/){
+					$last_norm_group =~ s/(̈|%|̄|̀|̣|`|̅|̈|̂|︤|︥|︦|⳿|~|\[|\])//g;
+					$strOutput =~ s/(.*<norm_group norm_group=")([^"]+)"/$1$last_norm_group"/ms;
+				}
+				$strOutput =~ s/(.*)<norm_group /$1<norm_group orig_group="$orig_group" /ms;
+				$fix_theta_group = 0;
+			}
+			
 		}
 		elsif ($subline =~ m/<.*>/) {
 			#other SGML tag, just save it
-			$strCurrentTokens .= $subline ."\n";			
+			$strCurrentTokens .= $subline ."\n";
 		}
 		else
 		{
 			#token
-			$strCurrentTokens .= $subline ."\n";		
+			$strCurrentTokens .= $subline ."\n";
 		}
 	}
 	$strOutput = &orderSGML($strOutput);
@@ -392,6 +396,11 @@ while (<FILE>) {
 			elsif ($strWord =~ /^($trinbase)($art|$ppos)($nounlist)($verblist)$/)  {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4;}
 			elsif ($strWord =~ /^($trinbase)($art|$ppos)($nounlist)($verblist)($ppero)$/)  {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4 ."|" . $5;}
 			elsif ($strWord =~ /^($trinbase)($art|$ppos)($nounlist)($verblist)($nounlist)$/)  {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4 ."|" . $5;}
+			#proper name subject separate bound group
+			elsif ($strWord =~ /^($trinbase)($namelist)$/)  {$strWord = $1 . "|" . $2;}
+			#prenominal separate bound group
+			elsif ($strWord =~ /^($trinbase)($art|$ppos)($nounlist)$/)  {$strWord = $1 . "|" . $2 . "|" . $3;}
+
 			#with je-
 			#pronominal
 			elsif ($strWord =~ /^(ϫⲉ)($triprobase)($ppers)($verblist)$/)  {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4;}
@@ -405,6 +414,11 @@ while (<FILE>) {
 			elsif ($strWord =~ /^(ϫⲉ)($trinbase)($art|$ppos)($nounlist)($verblist)$/)  {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4;}
 			elsif ($strWord =~ /^(ϫⲉ)($trinbase)($art|$ppos)($nounlist)($verblist)($ppero)$/)  {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4 ."|" . $5 . "|". $6;}
 			elsif ($strWord =~ /^(ϫⲉ)($trinbase)($art|$ppos)($nounlist)($verblist)($nounlist)$/)  {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4 ."|" . $5 . "|". $6;}
+			#proper name subject separate bound group
+			elsif ($strWord =~ /^(ϫⲉ)($trinbase)($namelist)$/)  {$strWord = $1 . "|" . $2 . "|" . $3;}
+			#prenominal separate bound group
+			elsif ($strWord =~ /^(ϫⲉ)($trinbase)($art|$ppos)($nounlist)$/)  {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4;}
+
 			
 			#elsif ($strWord =~ /^($art|$ppos)($namelist)$/) {$strWord = $1 . "|" . $2 ;} #experimental, allow names with article
 			#relative generic NP p-et-o, ... 
@@ -537,7 +551,6 @@ while (<FILE>) {
 			elsif ($strWord =~ /^(ⲉ?ⲛⲧ|ⲉ)(ⲁ|ⲛⲛⲉ)($ppers)($verblist)($nounlist)$/)  {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5;}
 			elsif ($strWord =~ /^($art)(ⲉⲛⲧ)(ⲁ)($ppers)($verblist)$/) {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5;} #nominalized
 			elsif ($strWord =~ /^($art)(ⲉⲛⲧ)(ⲁ)($ppers)($verblist)($ppero)$/) {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5 . "|" . $6;} #nominalized
-			###
 			#prenominal
 			elsif ($strWord =~ /^(ⲉ?ⲛⲧ|ⲉ)(ⲁ|ⲛⲛⲉ)($art|$ppos)($nounlist)$/)   {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4;}
 			elsif ($strWord =~ /^(ⲉ?ⲛⲧ|ⲉ)(ⲁ|ⲛⲛⲉ)($art|$ppos)($nounlist)($verblist)$/)   {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4 ."|" . $5;}
@@ -545,6 +558,10 @@ while (<FILE>) {
 			elsif ($strWord =~ /^(ⲉ?ⲛⲧ|ⲉ)(ⲁ|ⲛⲛⲉ)($art|$ppos)($nounlist)($verblist)($nounlist)$/)  {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5. "|".$6;}
 			elsif ($strWord =~ /^($art)(ⲉⲛⲧ)(ⲁ)($art|$ppos)($nounlist)$/) {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5;}  #nominalized
 			elsif ($strWord =~ /^($art)(ⲉⲛⲧ)(ⲁ)($art|$ppos)($nounlist)($verblist)$/) {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5. "|" . $6;}  #nominalized
+			#proper name subject separate bound group
+			elsif ($strWord =~ /^(ⲉ?ⲛⲧ|ⲉ)(ⲁ|ⲛⲛⲉ)($namelist)$/)  {$strWord = $1 . "|" . $2 . "|". $3;}
+			#prenominal separate bound group
+			elsif ($strWord =~ /^(ⲉ?ⲛⲧ|ⲉ)(ⲁ|ⲛⲛⲉ)($art|$ppos)($nounlist)$/)  {$strWord = $1 . "|" . $2 . "|" . $3. "|" . $4;}
 
 			#possessives
 			elsif ($strWord =~ /^((?:ⲟⲩⲛⲧ|ⲙⲛⲧ)[ⲁⲉⲏ]?)($ppers)($nounlist)$/) {$strWord = $1 . "|" . $2 . "|" . $3;}
@@ -587,6 +604,30 @@ while (<FILE>) {
 	}
 
 }
+}
+
+sub morph_analyze{
+
+	$strUnit	 = $_[0];
+	
+	#check segmentation file
+	if (exists $morphs{$strUnit}) {$strUnit = $morphs{$strUnit};} 
+
+	#mnt
+	elsif ($strUnit =~ /^(ⲙⲛⲧ)(ⲁⲧ)(..+)$/) {$strUnit = $1 . "|" . $2 . "|" . $3;}
+	elsif ($strUnit =~ /^(ⲙⲛⲧ)(ⲣⲉϥ)(..+)$/) {$strUnit = $1 . "|" . $2 . "|" . $3;}
+	elsif($strUnit =~ /^(ⲙⲛⲧ)(..+)$/) {$strUnit = $1 . "|" . $2;} #might overgenerate
+	
+	#ref
+	elsif ($strUnit =~ /^(ⲣⲉϥ)(ⲣ)($nounlist)$/) {$strUnit = $1 . "|" . $2 . "|" . $3;}
+	elsif ($strUnit =~ /^(ⲣⲉϥ)($verblist)$/) {$strUnit = $1 . "|" . $2;}
+
+	#no entries for plain at- : consider if no overgeneration
+	
+	#VN compounds
+	elsif($strUnit =~ /^($verblist)($nounlist)$/) { if(length($1)>2){$strUnit = $1 . "|" . $2;}} #might overgenerate	
+	
+	$strUnit;
 }
 
 sub preprocess{
@@ -710,7 +751,7 @@ sub orderSGML{
 }
 
 sub flush_tags{
-	@priorities = ('pb','cb','line','norm_group','norm','gap','hi','m');
+	@priorities = ('pb','cb','line','norm_group','norm','gap','hi','morph','m');
 	my %tags =  %{$_[0]};
 	$close = $_[1];
 	if ($close eq "close"){
@@ -732,4 +773,70 @@ sub flush_tags{
 			print "$tags{$key}\n";
 		}
 	}
+}
+
+sub align{
+			$strCurrentTokens = $_[0];
+			$strTokenized = $_[1];
+			$tag = $_[2];
+			
+			$strPattern = ($strTokenized);
+			@t = split(/\|/, $strTokenized);
+
+			$strPattern =~ s/([\[\]\(\)])/\\$1/g;
+			$strPattern =~ s/([^\\\|\n\r])/$1#/g;
+			$strPattern =~ s/\|/\)\(/g;
+			$strPattern =~ s'#'(?:(?:[\r\\ṇ̄︦︤︥̀̂`⳿̣̂̅̈︤︦]|<[^>]+>|̣|~)*)?'g; #allow intervening tags, linebreaks, capital letter escapes with tilde, square brackets and Coptic diacritics
+			$strPattern = join '','(?<!\\")(' , $strPattern , ')'; #negative lookbehind prevents matching tokens within a quoted attribute in an SGML tag
+			$strPattern =~ s/\n*$//; #strip pattern 
+			$strPattern =~ s/^\n*//;
+			$strPattern =~ s/[\r]*//; #don't allow carriage returns anywhere
+			$count = () = $strTokenized =~ /\|/g; 
+			
+			#handle split theta tokens
+			if ($strCurrentTokens =~ /ⲑ/ && $strTokenized !~ /ⲑ/ && $strTokenized =~ /ⲧ\|ϩ/){
+				$fix_theta = 1;
+				$fix_theta_group = 1;
+				$strCurrentTokens =~ s/ⲑ/ⲧϩ/;
+			}
+			else{
+				$fix_theta = 0;
+			}
+			
+			if ($strCurrentTokens =~ /$strPattern/){
+				if ($count==0) {$t[0]=$strTokenized; $strCurrentTokens =~ s/$strPattern/<$tag $tag=\"$t[(1-1)]\">\n$1\n<\/$tag>\n/;}
+				elsif ($count==1) {$strCurrentTokens =~ s/$strPattern/<$tag $tag=\"$t[0]\">\n$1\n<\/$tag>\n<$tag $tag=\"$t[1]\">\n$2\n<\/$tag>\n/;}
+				elsif ($count==2) {$strCurrentTokens =~ s/$strPattern/<$tag $tag=\"$t[(1-1)]\">\n$1\n<\/$tag>\n<$tag $tag=\"$t[(2-1)]\">\n$2\n<\/$tag>\n<$tag $tag=\"$t[(3-1)]\">\n$3\n<\/$tag>\n/;}
+				elsif ($count==3) {$strCurrentTokens =~ s/$strPattern/<$tag $tag=\"$t[(1-1)]\">\n$1\n<\/$tag>\n<$tag $tag=\"$t[(2-1)]\">\n$2\n<\/$tag>\n<$tag $tag=\"$t[(3-1)]\">\n$3\n<\/$tag>\n<$tag $tag=\"$t[(4-1)]\">\n$4\n<\/$tag>\n/;}
+				elsif ($count==4) {$strCurrentTokens =~ s/$strPattern/<$tag $tag=\"$t[(1-1)]\">\n$1\n<\/$tag>\n<$tag $tag=\"$t[(2-1)]\">\n$2\n<\/$tag>\n<$tag $tag=\"$t[(3-1)]\">\n$3\n<\/$tag>\n<$tag $tag=\"$t[(4-1)]\">\n$4\n<\/$tag>\n<$tag $tag=\"$t[(5-1)]\">\n$5\n<\/$tag>\n/;}
+				elsif ($count==5) {$strCurrentTokens =~ s/$strPattern/<$tag $tag=\"$t[(1-1)]\">\n$1\n<\/$tag>\n<$tag $tag=\"$t[(2-1)]\">\n$2\n<\/$tag>\n<$tag $tag=\"$t[(3-1)]\">\n$3\n<\/$tag>\n<$tag $tag=\"$t[(4-1)]\">\n$4\n<\/$tag>\n<$tag $tag=\"$t[(5-1)]\">\n$5\n<\/$tag>\n<$tag $tag=\"$t[(6-1)]\">\n$6\n<\/$tag>\n/;}
+				elsif ($count==6) {$strCurrentTokens =~ s/$strPattern/<$tag $tag=\"$t[(1-1)]\">\n$1\n<\/$tag>\n<$tag $tag=\"$t[(2-1)]\">\n$2\n<\/$tag>\n<$tag $tag=\"$t[(3-1)]\">\n$3\n<\/$tag>\n<$tag $tag=\"$t[(4-1)]\">\n$4\n<\/$tag>\n<$tag $tag=\"$t[(5-1)]\">\n$5\n<\/$tag>\n<$tag $tag=\"$t[(6-1)]\">\n$6\n<\/$tag>\n<$tag $tag=\"$t[(7-1)]\">\n$7\n<\/$tag>\n/;}
+				elsif ($count==7) {$strCurrentTokens =~ s/$strPattern/<$tag $tag=\"$t[(1-1)]\">\n$1\n<\/$tag>\n<$tag $tag=\"$t[(2-1)]\">\n$2\n<\/$tag>\n<$tag $tag=\"$t[(3-1)]\">\n$3\n<\/$tag>\n<$tag $tag=\"$t[(4-1)]\">\n$4\n<\/$tag>\n<$tag $tag=\"$t[(5-1)]\">\n$5\n<\/$tag>\n<$tag $tag=\"$t[(6-1)]\">\n$6\n<\/$tag>\n<$tag $tag=\"$t[(7-1)]\">\n$7\n<\/$tag>\n<$tag $tag=\"$t[(8-1)]\">\n$8\n<\/$tag>\n/;}
+				elsif ($count==8) {$strCurrentTokens =~ s/$strPattern/<$tag $tag=\"$t[(1-1)]\">\n$1\n<\/$tag>\n<$tag $tag=\"$t[(2-1)]\">\n$2\n<\/$tag>\n<$tag $tag=\"$t[(3-1)]\">\n$3\n<\/$tag>\n<$tag $tag=\"$t[(4-1)]\">\n$4\n<\/$tag>\n<$tag $tag=\"$t[(5-1)]\">\n$5\n<\/$tag>\n<$tag $tag=\"$t[(6-1)]\">\n$6\n<\/$tag>\n<$tag $tag=\"$t[(7-1)]\">\n$7\n<\/$tag>\n<$tag $tag=\"$t[(8-1)]\">\n$8\n<\/$tag>\n<$tag $tag=\"$t[(9-1)]\">\n$9\n<\/$tag>\n/;}
+
+				$strCurrentTokens =~ s/<$tag[^>]*>\s*<\/$tag>\s*//; #remove leading or trailing empty element
+				if ($fix_theta){
+					$strCurrentTokens =~ s/ⲧ(\n<\/$tag>\n<$tag $tag="([^"]+)">\n)ϩ/ⲑ$1/;
+				}
+				$strCurrentTokens = &restore_caps($strCurrentTokens);
+			}
+			else { 
+				if  ($count==0) {
+					$flat_word = $word;
+					$flat_word =~ s/[\n\|]+//g;
+					$strCurrentTokens =  "<$tag $tag=\"$flat_word\" warning=\"no pattern match for token\">\n" . $strCurrentTokens . "\n</$tag>\n"; #no match for pattern
+				}
+				else {
+
+					$strUnits="";
+					@subpipes = split('\|',$strTokenized);
+					foreach $subpipe (@subpipes)	{
+					$strUnits .= "<$tag $tag=\"$subpipe\">\n$subpipe\n</$tag>\n";
+					
+					}
+					$strCurrentTokens = $strUnits;
+				}
+			}
+			$strCurrentTokens =~ s/\n+/\n/g;
+			$strCurrentTokens;
 }
