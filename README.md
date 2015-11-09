@@ -36,11 +36,12 @@ Options and argument:
 Examples:
 
 Tokenize a Coptic plain text file in UTF-8 encoding (without BOM):
-  tokenize_coptic.pl in_Coptic_utf8.txt > out_Coptic_tokenized.txt
+
+tokenize_coptic.pl in_Coptic_utf8.txt > out_Coptic_tokenized.txt
   
-v2.X.X adds the -l parameter, which allows tokenization of text that breaks across lines (as in a diplomatic transcription of a manuscript)
-v3.X.X adds a file with most frequently used previous segmentations called segmentation_table.tab. This file should be in the same directory as the tokenizer and the lexicon file, copt_lex.tab.
-v4.X.X adds morphological analysis and a corresponding file with known morphological segmentations, morph_table.tab.
+  * v2.X.X adds the -l parameter, which allows tokenization of text that breaks across lines (as in a diplomatic transcription of a manuscript)
+  * v3.X.X adds a file with most frequently used previous segmentations called segmentation_table.tab. This file should be in the same directory as the tokenizer and the lexicon file, copt_lex.tab.
+  * v4.X.X adds morphological analysis and a corresponding file with known morphological segmentations, morph_table.tab.
 
 Copyright 2013-2015, Amir Zeldes
 
