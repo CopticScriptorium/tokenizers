@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# tokenize_coptic.pl Version 4.0.3
+# tokenize_coptic.pl Version 4.0.4
 
 # this assumes a UTF-8 file with untokenized 'word forms' separated by spaces or underscores
 # three files must be present in the tokenizer directory or specified via options: copt_lex.tab, segmentation_table.tab and morph_table.tab
@@ -243,8 +243,8 @@ while (<FILE>) {
 				if ($strOutput =~ /.*<norm_group norm_group="([^"]+)"/ms){
 					$last_norm_group = $1;
 				}
-				if ($last_norm_group =~ /(̈|%|̄|̀|̣|`|̅|̈|̂|︤|︥|︦|⳿|~|\[|\])/){
-					$last_norm_group =~ s/(̈|%|̄|̀|̣|`|̅|̈|̂|︤|︥|︦|⳿|~|\[|\])//g;
+				if ($last_norm_group =~ /(̈|%|̄|̀|̣|`|̅|̈|̂|︤|︥|︦|⳿|~|\[|\]|̇)/){
+					$last_norm_group =~ s/(̈|%|̄|̀|̣|`|̅|̈|̂|︤|︥|︦|⳿|~|\[|\]|̇)//g;
 					$strOutput =~ s/(.*<norm_group norm_group=")([^"]+)"/$1$last_norm_group"/ms;
 				}
 				$strOutput =~ s/(.*)<norm_group /$1<norm_group orig_group="$orig_group" /ms;
@@ -281,7 +281,7 @@ while (<FILE>) {
 		
 		$dipl = $strWord;
 		#$strWord = &encode_caps($strWord);
-		$strWord =~ s/(̈|%|̄|̀|̣|`|̅|̈|̂|︤|︥|︦|⳿|~|\[|\])//g; 
+		$strWord =~ s/(̈|%|̄|̀|̣|`|̅|̈|̂|︤|︥|︦|⳿|~|\[|\]|̇)//g; 
 
 		#remove supralinear strokes and other decorations for tokenization
 		if ($strWord =~ /\|/) #pipes found, assume explicit tokenization is present
@@ -796,7 +796,7 @@ sub align{
 			$strPattern =~ s/([\[\]\(\)])/\\$1/g;
 			$strPattern =~ s/([^\\\|\n\r])/$1#/g;
 			$strPattern =~ s/\|/\)\(/g;
-			$strPattern =~ s'#'(?:(?:[\r\\ṇ̄︦︤︥̀̂`⳿̣̂̅̈︤︦]|<[^>]+>|̣|~)*)?'g; #allow intervening tags, linebreaks, capital letter escapes with tilde, square brackets and Coptic diacritics
+			$strPattern =~ s'#'(?:(?:[\r\\ṇ̄︦︤︥̀̂`⳿̣̂̅̈︤︦̇]|<[^>]+>|̣|~)*)?'g; #allow intervening tags, linebreaks, capital letter escapes with tilde, square brackets and Coptic diacritics
 			$strPattern = join '','(?<!\\")(' , $strPattern , ')'; #negative lookbehind prevents matching tokens within a quoted attribute in an SGML tag
 			$strPattern =~ s/\n*$//; #strip pattern 
 			$strPattern =~ s/^\n*//;
