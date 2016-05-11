@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# tokenize_coptic.pl Version 4.0.5
+# tokenize_coptic.pl Version 4.1.0
 
 # this assumes a UTF-8 file with untokenized 'word forms' separated by spaces or underscores
 # three files must be present in the tokenizer directory or specified via options: copt_lex.tab, segmentation_table.tab and morph_table.tab
@@ -32,6 +32,7 @@ Options and argument:
 -p              output [p]ipe separated word forms instead of tokens in separate lines wrapped by <norm> tags
 -l               add [l]ine tags marking original linebreaks in input file
 -n              [n]o output of word forms in <norm_group> elements before the set of tokens extracted from each group
+-t              data is already [t]okenized using pipes - just reformat and wrap in tags as configured
 
 <FILE>    A text file encoded in UTF-8 without BOM, possibly containing markup. Bound groups are separated by spaces or underscores.
 
@@ -50,7 +51,7 @@ _USAGE_
 
 ### OPTIONS BEGIN ###
 %opts = ();
-getopts('hlm:npd:s:',\%opts) or die $usage;
+getopts('hlm:npd:s:t',\%opts) or die $usage;
 
 #help
 if ($opts{h} || (@ARGV == 0)) {
@@ -58,6 +59,7 @@ if ($opts{h} || (@ARGV == 0)) {
     exit;
 }
 if ($opts{p})   {$pipes = 1;} else {$pipes = 0;}
+if ($opts{t})   {$trust_tokenization = 1;} else {$trust_tokenization = 0;}
 if ($opts{l})   {$nolines = 0;} else {$nolines = 1;}
 if ($opts{n})   {$noword = 1;} else {$noword = 0;}
 if (!($lexicon = $opts{d})) 
@@ -171,7 +173,7 @@ while (<FILE>) {
 
     chomp;
 	$input = $_;
-	$input =~ s/\n//g;
+	$input =~ tr/\n//;
 	if ($input =~ /^<[^>+]>$/ || $nolines==1)
 	{
 		$line.=$input;
@@ -208,9 +210,11 @@ while (<FILE>) {
 			}
 			$strCurrentTokens = "";
 			
-			if ($noword == 1) {$subline =~ s/[\r\n]*<norm_group[^>]*>[\r\n]*//g; $strOutput .= $subline;
+			if ($noword == 1) {
+				$subline =~ s/[\r\n]*<norm_group[^>]*>[\r\n]*//g; 
+				$strOutput .= $subline;
 			}
-			else{	 $subline =~ s/\|//g; $strOutput .= $subline ."\n";}
+			else{	 $subline =~ s/[\|-]//g; $strOutput .= $subline ."\n";}
 		}
 		elsif ($subline eq "</norm_group>"){
 			#bound group ends, flush tags and output resegmented tokens
@@ -218,6 +222,9 @@ while (<FILE>) {
 
 			$strCurrentTokens = &align($strCurrentTokens,$strTokenized,"norm");
 			@norms =  ( $strCurrentTokens =~ /norm=\"([^\"]+)\"/g );
+			if ($trust_tokenization == 1){
+				$strCurrentTokens =~ s/-//g; # Remove existing morphological analysis if present
+			}
 			$strMorphed = "";
 			foreach $norm (@norms){
 				$analysis = &morph_analyze($norm);
@@ -234,19 +241,25 @@ while (<FILE>) {
 			if ($pipes == 1)
 			{
 				$strCurrentTokens =~ s/\n<\/norm>\n<norm[^>]*>\n/|/g;
+				$strCurrentTokens =~ s/>\|/>\n\|/g;  # Needed in case the border is adjacent to an existing input SGML tag - start next unit on new line
 				$strCurrentTokens =~ s/<\/?norm[^>]*>\n//g;
 				$strCurrentTokens =~ s/\n<\/morph>\n<morph[^>]*>\n/-/g;
 				$strCurrentTokens =~ s/<\/?morph[^>]*>\n//g;
+				$strCurrentTokens =~ s/>-/>\n-/g;  # Needed in case the border is adjacent to an existing input SGML tag - start next unit on new line
+				
 			}
 			else
 			{
 				$strCurrentTokens =~ s/\|/\n/g;
 			}
+
 			$strCurrentTokens =~ s/\n+/\n/g;
 			$strOutput .= $strCurrentTokens;
 			$strCurrentTokens = "";
 			$orig_group= "";
-			if ($noword == 1) {$subline =~ s/\n*<\/?norm_group[^>]*>\n*//g;}
+			if ($noword == 1) {
+				$subline =~ s/[\n\r]*<\/norm_group>[\n\r]*/_/g;
+			}
 			$strOutput .= $subline ;
 			if ($fix_theta_group==1){
 				if ($strOutput =~ /.*<norm_group norm_group="([^"]*ⲑ[^"]*)"/ms){
@@ -277,8 +290,18 @@ while (<FILE>) {
 			$strCurrentTokens .= $subline ."\n";
 		}
 	}
-	$strOutput = &orderSGML($strOutput);
-	print $strOutput;
+
+	#push trailing underscores etc. after tag to previous word's end
+	$strOutput =~ s/((\n?<[^>]+>\n?)+)([_\|-])/\n$3\n$1/g;
+	$strOutput =~ s/_</_\n</g;
+	$strOutput =~ s/\n+/\n/g;
+	
+	if ($noword==1 && $pipes==1 && $nolines == 0){
+		$strOutput = &orderSGML($strOutput,1);	
+	}
+	else{
+		$strOutput = &orderSGML($strOutput,0);
+	}
 
 	sub tokenize{
 	$strWord = $_[0];
@@ -286,7 +309,7 @@ while (<FILE>) {
 	
 	if ($strWord =~ /<.+>/)
 	{
-		$strWord =~ s/@/ /g;
+		$strWord =~ tr/@/ /;
 		$strOutput .= "$strWord\n"; #XML tag
 	}
 	elsif ($strWord eq ""){ #do nothing
@@ -295,13 +318,12 @@ while (<FILE>) {
 	{
 		
 		$dipl = $strWord;
-		#$strWord = &encode_caps($strWord);
+		#remove supralinear strokes and other decorations for tokenization
 		$strWord =~ s/(̈|%|̄|̀|̣|`|̅|̈|̂|︤|︥|︦|⳿|~|\[|\]|̇)//g; 
 
-		#remove supralinear strokes and other decorations for tokenization
-		if ($strWord =~ /\|/) #pipes found, assume explicit tokenization is present
-		{
-			$dipl =~ s/\|//g;
+		if ($trust_tokenization == 1 || $strWord =~ /\|/){ #pipes are being used, assume explicit tokenization is present
+			$dipl =~ tr/\|//;
+			$dipl =~ tr/-//;
 			$strWord;
 		}
 		else #try to tokenize based on grammar patterns
@@ -681,42 +703,47 @@ while (<FILE>) {
 sub morph_analyze{
 
 	$strUnit	 = $_[0];
+	if ($strUnit =~ m/-/ || $trust_tokenization == 1){
+		# If '-' marks already present or we trust there is already tokenization, replace them with pipes and report that analysis
+		$strUnit =~ tr/-/\|/;
+	}
+	else{
 	
-	#check segmentation file
-	if (exists $morphs{$strUnit}) {$strUnit = $morphs{$strUnit};} 
+		#check segmentation file
+		if (exists $morphs{$strUnit}) {$strUnit = $morphs{$strUnit};} 
 
-	#mnt
-	elsif ($strUnit =~ /^(ⲙⲛⲧ)(ⲁⲧ)(..+)$/) {$strUnit = $1 . "|" . $2 . "|" . $3;}
-	elsif ($strUnit =~ /^(ⲙⲛⲧ)(ⲣⲉϥ)(..+)$/) {$strUnit = $1 . "|" . $2 . "|" . $3;}
-	elsif($strUnit =~ /^(ⲙⲛⲧ)(..+)$/) {$strUnit = $1 . "|" . $2;} #might overgenerate
-	
-	#ref
-	elsif ($strUnit =~ /^(ⲣⲉϥ)(ⲣ)($nounlist)$/) {$strUnit = $1 . "|" . $2 . "|" . $3;}
-	elsif ($strUnit =~ /^(ⲣⲉϥ)($verblist)$/) {$strUnit = $1 . "|" . $2;}
+		#mnt
+		elsif ($strUnit =~ /^(ⲙⲛⲧ)(ⲁⲧ)(..+)$/) {$strUnit = $1 . "|" . $2 . "|" . $3;}
+		elsif ($strUnit =~ /^(ⲙⲛⲧ)(ⲣⲉϥ)(..+)$/) {$strUnit = $1 . "|" . $2 . "|" . $3;}
+		elsif($strUnit =~ /^(ⲙⲛⲧ)(..+)$/) {$strUnit = $1 . "|" . $2;} #might overgenerate
+		
+		#ref
+		elsif ($strUnit =~ /^(ⲣⲉϥ)(ⲣ)($nounlist)$/) {$strUnit = $1 . "|" . $2 . "|" . $3;}
+		elsif ($strUnit =~ /^(ⲣⲉϥ)($verblist)$/) {$strUnit = $1 . "|" . $2;}
 
-	#no entries for plain at- : consider if no overgeneration
-	
-	#VN compounds
-	elsif($strUnit =~ /^($verblist)($nounlist)$/) { if(length($1)>2){$strUnit = $1 . "|" . $2;}} #might overgenerate	
-	
+		#no entries for plain at- : consider if no overgeneration
+		
+		#VN compounds
+		elsif($strUnit =~ /^($verblist)($nounlist)$/) { if(length($1)>2){$strUnit = $1 . "|" . $2;}} #might overgenerate	
+	}
 	$strUnit;
 }
 
 sub preprocess{
 
 	$rawline = $_[0];
+	$rawline =~ s/ +/ /g; # Note that multiple spaces will be collapsed, including inside XML tags
 	$rawline =~ s/([^< ]+) (?=[^<>]*>)/$1%/g;
 	$rawline =~ s/([^<_]+)_(?=[^<>]*>)/$1@/g;
-	$rawline =~ s/_/ /g;	
-	$rawline =~ s/ +/ /g;	
+	$rawline =~ tr/_/ /;	
 	$rawline =~ s/(^| +)([^ ]+)(?=[ ]+|$)/$1 . '<norm_group%norm_group="' . &removexml($2) . '">' . $2 . "<\/norm_group>"/eg;
 	$rawline =~ s/>/>\n/g;
 	$rawline =~ s/</\n</g;
 	$rawline =~ s/\n+/\n/g;
 	$rawline =~ s/^\n//;
 	$rawline =~ s/\n$//;
-	$rawline =~ s/%/ /g;
-	$rawline =~ s/@/_/g;
+	$rawline =~ tr/%/ /;
+	$rawline =~ tr/@/_/;
 	$rawline = &encode_caps($rawline);
 	$rawline;
 	
@@ -800,6 +827,8 @@ sub restore_caps{
 
 sub orderSGML{
 	$input = $_[0];
+	$blockmode = $_[1];
+	$input =~ s/></>\n</g; # Make sure tags start on their own lines
 	@lines = split("\n",$input);
 	foreach $line (@lines)	{
 		if ($line =~ m/(<\/([^>]+)>)/) { # Closing tag
@@ -811,40 +840,73 @@ sub orderSGML{
 			else{$openers{$2} = $1}
 		}
 		else { # Token - flush opening and closing tags in order
-		&flush_tags(\%closers,"close");
-		&flush_tags(\%openers,"open");
-		print "$line\n";
+		&flush_tags(\%closers,"close",$blockmode);
+		&flush_tags(\%openers,"open",$blockmode);
+		if ($blockmode==1){
+			$line =~ s/\n//g;
+			$line =~ s/<line>//g;
+			$line =~ s/<\/line>/\n/g;
+			print $line;
+		}
+		else{
+			print "$line\n";
+		}
 		undef %openers;
 		undef %closers;
 		}
 	}
 
-	&flush_tags(\%closers,"close");
+	&flush_tags(\%closers,"close",$blockmode);
 }
 
 sub flush_tags{
-	@priorities = ('pb','cb','line','norm_group','norm','gap','hi','morph','m');
+	@priorities = ('TEI','head','body','doc','chapter','verse','pb','cb','line','norm_group','norm','gap','hi','morph','m');
 	my %tags =  %{$_[0]};
 	$close = $_[1];
+	$blockmode = $_[2];
 	if ($close eq "close"){
 		@priorities = reverse @priorities;
 			foreach my $key ( sort keys %tags )	{
 				if (!( grep /^$key$/, @priorities)){
-					print "$tags{$key}\n";
+					if ($blockmode ==1){
+						print &blockify($tags{$key});
+					}
+					else{
+						print "$tags{$key}\n";
+					}
 				}
 			}
 		}
 	foreach $priority (@priorities){
 		if (exists $tags{$priority}){
-			print $tags{$priority}."\n";
+			if ($blockmode ==1){
+				print &blockify($tags{$priority});
+			}
+			else{
+				print $tags{$priority}."\n";
+			}
 		}
 		delete $tags{$priority};
 	}
 	if ($close eq "open"){
 		foreach my $key ( sort {$b cmp $a} keys %tags )	{
-			print "$tags{$key}\n";
+			if ($blockmode ==1){
+				print &blockify($tags{$key});
+			}
+			else{
+				print "$tags{$key}\n";
+			}
 		}
 	}
+}
+
+sub blockify{
+# Removes all line breaks and puts new line breaks instead of <line> tags
+	$input = $_[0];
+	$input =~ s/\n//g;
+	$input =~ s/<line>//g;
+	$input =~ s/<\/line>/\n/g;
+	$input;
 }
 
 sub align{
@@ -876,6 +938,7 @@ sub align{
 			}
 			
 			if ($strCurrentTokens =~ /$strPattern/){
+
 				if ($count==0) {$t[0]=$strTokenized; $strCurrentTokens =~ s/$strPattern/<$tag $tag=\"$t[(1-1)]\">\n$1\n<\/$tag>\n/;}
 				elsif ($count==1) {$strCurrentTokens =~ s/$strPattern/<$tag $tag=\"$t[0]\">\n$1\n<\/$tag>\n<$tag $tag=\"$t[1]\">\n$2\n<\/$tag>\n/;}
 				elsif ($count==2) {$strCurrentTokens =~ s/$strPattern/<$tag $tag=\"$t[(1-1)]\">\n$1\n<\/$tag>\n<$tag $tag=\"$t[(2-1)]\">\n$2\n<\/$tag>\n<$tag $tag=\"$t[(3-1)]\">\n$3\n<\/$tag>\n/;}
@@ -889,7 +952,7 @@ sub align{
 				$strCurrentTokens =~ s/<$tag[^>]*>\s*<\/$tag>\s*//; #remove leading or trailing empty element
 				if ($fix_theta){
 					$strCurrentTokens =~ s/ⲧ(\n<\/$tag>\n<$tag $tag="([^"]+)">\n)ϩ/ⲑ$1/;
-				}
+				}				
 				$strCurrentTokens = &restore_caps($strCurrentTokens);
 			}
 			else { 
@@ -903,8 +966,7 @@ sub align{
 					$strUnits="";
 					@subpipes = split('\|',$strTokenized);
 					foreach $subpipe (@subpipes)	{
-					$strUnits .= "<$tag $tag=\"$subpipe\">\n$subpipe\n</$tag>\n";
-					
+						$strUnits .= "<$tag $tag=\"$subpipe\">\n$subpipe\n</$tag>\n";					
 					}
 					$strCurrentTokens = $strUnits;
 				}
