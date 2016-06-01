@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# tokenize_coptic.pl Version 4.1.0
+# tokenize_coptic.pl Version 4.1.1
 
 # this assumes a UTF-8 file with untokenized 'word forms' separated by spaces or underscores
 # three files must be present in the tokenizer directory or specified via options: copt_lex.tab, segmentation_table.tab and morph_table.tab
@@ -221,6 +221,7 @@ while (<FILE>) {
 				#search for morphemes to add
 
 			$strCurrentTokens = &align($strCurrentTokens,$strTokenized,"norm");
+
 			@norms =  ( $strCurrentTokens =~ /norm=\"([^\"]+)\"/g );
 			if ($trust_tokenization == 1){
 				$strCurrentTokens =~ s/-//g; # Remove existing morphological analysis if present
@@ -255,6 +256,7 @@ while (<FILE>) {
 
 			$strCurrentTokens =~ s/\n+/\n/g;
 			$strOutput .= $strCurrentTokens;
+
 			$strCurrentTokens = "";
 			$orig_group= "";
 			if ($noword == 1) {
@@ -295,6 +297,7 @@ while (<FILE>) {
 	$strOutput =~ s/((\n?<[^>]+>\n?)+)([_\|-])/\n$3\n$1/g;
 	$strOutput =~ s/_</_\n</g;
 	$strOutput =~ s/\n+/\n/g;
+
 	
 	if ($noword==1 && $pipes==1 && $nolines == 0){
 		$strOutput = &orderSGML($strOutput,1);	
@@ -925,7 +928,11 @@ sub align{
 			$strPattern =~ s/\n*$//; #strip pattern 
 			$strPattern =~ s/^\n*//;
 			$strPattern =~ s/[\r]*//; #don't allow carriage returns anywhere
+			$strPattern =~ s/\./\\./g; #escape periods
 			$count = () = $strTokenized =~ /\|/g; 
+
+			#ensure strCurrentTokens contains no pipes before alignment
+			$strCurrentTokens =~ s/\|//g;
 			
 			#handle split theta tokens
 			if ($strCurrentTokens =~ /ⲑ/ && $strTokenized !~ /ⲑ/ && $strTokenized =~ /ⲧ\|ϩ/){
@@ -953,6 +960,9 @@ sub align{
 				if ($fix_theta){
 					$strCurrentTokens =~ s/ⲧ(\n<\/$tag>\n<$tag $tag="([^"]+)">\n)ϩ/ⲑ$1/;
 				}				
+
+				$strCurrentTokens =~ s/\[((<[^>]+>)+)/$1\[/g;  #move leading bracket inside token
+				$strCurrentTokens =~ s/((<[^>]+>)+\n*)\]/\]$1/g;  #move trailing bracket inside token
 				$strCurrentTokens = &restore_caps($strCurrentTokens);
 			}
 			else { 
@@ -962,7 +972,6 @@ sub align{
 					$strCurrentTokens =  "<$tag $tag=\"$flat_word\" warning=\"no pattern match for token\">\n" . $strCurrentTokens . "\n</$tag>\n"; #no match for pattern
 				}
 				else {
-
 					$strUnits="";
 					@subpipes = split('\|',$strTokenized);
 					foreach $subpipe (@subpipes)	{
