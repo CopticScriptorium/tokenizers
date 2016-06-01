@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# tokenize_coptic.pl Version 4.1.1
+# tokenize_coptic.pl Version 4.1.2
 
 # this assumes a UTF-8 file with untokenized 'word forms' separated by spaces or underscores
 # three files must be present in the tokenizer directory or specified via options: copt_lex.tab, segmentation_table.tab and morph_table.tab
@@ -320,17 +320,21 @@ while (<FILE>) {
 		else
 	{
 		
+		
 		$dipl = $strWord;
+
 		#remove supralinear strokes and other decorations for tokenization
 		$strWord =~ s/(̈|%|̄|̀|̣|`|̅|̈|̂|︤|︥|︦|⳿|~|\[|\]|̇)//g; 
-
-		if ($trust_tokenization == 1 || $strWord =~ /\|/){ #pipes are being used, assume explicit tokenization is present
+		if (($trust_tokenization == 1 || $strWord =~ /\|/) && $strWord !~ m/ⲑ\|/){ #pipes are being used, assume explicit tokenization is present
 			$dipl =~ tr/\|//;
 			$dipl =~ tr/-//;
 			$strWord;
 		}
 		else #try to tokenize based on grammar patterns
 		{
+			if ($strWord =~ m/ⲑ\|/ && $trust_tokenization == 1) {
+				$strWord =~ s/\|//g;
+			}
 
 			#check for theta/phi containing an article
 			if($strWord =~ /^($nprep|$pprep)?(ⲑ|ⲫ)(.+)$/) 
@@ -358,7 +362,6 @@ while (<FILE>) {
 					$strWord = $theta . $verb_candidate;
 				}
 			}
-
 
 			#check for fused t-i
 			if($strWord =~ /^(ϣⲁⲛ)ϯ(.*)/) 
