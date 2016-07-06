@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# tokenize_coptic.pl Version 4.1.2
+# tokenize_coptic.pl Version 4.1.3
 
 # this assumes a UTF-8 file with untokenized 'word forms' separated by spaces or underscores
 # three files must be present in the tokenizer directory or specified via options: copt_lex.tab, segmentation_table.tab and morph_table.tab
@@ -238,7 +238,7 @@ while (<FILE>) {
 			$strMorphed =~ s/\|$//;
 
 			$strCurrentTokens = &align($strCurrentTokens,$strMorphed,"morph");
-
+			
 			if ($pipes == 1)
 			{
 				$strCurrentTokens =~ s/\n<\/norm>\n<norm[^>]*>\n/|/g;
@@ -280,6 +280,7 @@ while (<FILE>) {
 				$strOutput =~ s/(.*)<norm_group /$1<norm_group orig_group="$orig_group" /ms;
 				$fix_theta_group = 0;
 			}
+			$strOutput =~ s/(norm_group="[^"\[\]]*)([\[\]])/$1/g;
 			
 		}
 		elsif ($subline =~ m/<.*>/) {
@@ -298,6 +299,8 @@ while (<FILE>) {
 	$strOutput =~ s/_</_\n</g;
 	$strOutput =~ s/\n+/\n/g;
 
+	#remove final closing square bracket from norm_group if needed
+	$strOutput =~ s/(norm_group="[^"\[\]]*)([\[\]])/$1/g;
 	
 	if ($noword==1 && $pipes==1 && $nolines == 0){
 		$strOutput = &orderSGML($strOutput,1);	
@@ -926,7 +929,7 @@ sub align{
 			$strPattern =~ s/([\[\]\(\)])/\\$1/g;
 			$strPattern =~ s/([^\\\|\n\r])/$1#/g;
 			$strPattern =~ s/\|/\)\(/g;
-			$strPattern =~ s'#'(?:(?:[\r\\ṇ̄︦︤︥̀̂`⳿̣̂̅̈︤︦̇]|<[^>]+>|̣|~)*)?'g; #allow intervening tags, linebreaks, capital letter escapes with tilde, square brackets and Coptic diacritics
+			$strPattern =~ s'#'(?:(?:[@%\r\\ṇ̄︦︤︥̀̂`⳿̣̂̅̈︤︦̇]|<[^>]+>|̣|~)*)?'g; #allow intervening tags, linebreaks, capital letter escapes with tilde, square bracket escapes and Coptic diacritics
 			$strPattern = join '','(?<!\\")(' , $strPattern , ')'; #negative lookbehind prevents matching tokens within a quoted attribute in an SGML tag
 			$strPattern =~ s/\n*$//; #strip pattern 
 			$strPattern =~ s/^\n*//;
@@ -937,6 +940,10 @@ sub align{
 			#ensure strCurrentTokens contains no pipes before alignment
 			$strCurrentTokens =~ s/\|//g;
 			
+			#replacement for enveloping square brackets
+			$strCurrentTokens =~ s/\[/@/;
+			$strCurrentTokens =~ s/\]/%/;
+			
 			#handle split theta tokens
 			if ($strCurrentTokens =~ /ⲑ/ && $strTokenized !~ /ⲑ/ && $strTokenized =~ /ⲧ\|ϩ/){
 				$fix_theta = 1;
@@ -945,6 +952,9 @@ sub align{
 			}
 			else{
 				$fix_theta = 0;
+			}
+			if ($tag eq "morph" && $strCurrentTokens =~ m/(Ⲁ|Ⲃ|Ⲅ|Ⲇ|Ⲉ|Ⲍ|Ⲏ|Ⲑ|Ⲓ|Ⲕ|Ⲗ|Ⲙ|Ⲛ|Ⲝ|Ⲟ|Ⲡ|Ⲣ|Ⲥ|Ⲧ|Ⲫ|Ⲭ|Ⲯ|Ⲱ|Ϭ|Ϣ|Ϩ|Ϥ|Ϫ|Ϯ)/){
+				$strCurrentTokens = &encode_caps($strCurrentTokens);
 			}
 			
 			if ($strCurrentTokens =~ /$strPattern/){
@@ -959,16 +969,18 @@ sub align{
 				elsif ($count==7) {$strCurrentTokens =~ s/$strPattern/<$tag $tag=\"$t[(1-1)]\">\n$1\n<\/$tag>\n<$tag $tag=\"$t[(2-1)]\">\n$2\n<\/$tag>\n<$tag $tag=\"$t[(3-1)]\">\n$3\n<\/$tag>\n<$tag $tag=\"$t[(4-1)]\">\n$4\n<\/$tag>\n<$tag $tag=\"$t[(5-1)]\">\n$5\n<\/$tag>\n<$tag $tag=\"$t[(6-1)]\">\n$6\n<\/$tag>\n<$tag $tag=\"$t[(7-1)]\">\n$7\n<\/$tag>\n<$tag $tag=\"$t[(8-1)]\">\n$8\n<\/$tag>\n/;}
 				elsif ($count==8) {$strCurrentTokens =~ s/$strPattern/<$tag $tag=\"$t[(1-1)]\">\n$1\n<\/$tag>\n<$tag $tag=\"$t[(2-1)]\">\n$2\n<\/$tag>\n<$tag $tag=\"$t[(3-1)]\">\n$3\n<\/$tag>\n<$tag $tag=\"$t[(4-1)]\">\n$4\n<\/$tag>\n<$tag $tag=\"$t[(5-1)]\">\n$5\n<\/$tag>\n<$tag $tag=\"$t[(6-1)]\">\n$6\n<\/$tag>\n<$tag $tag=\"$t[(7-1)]\">\n$7\n<\/$tag>\n<$tag $tag=\"$t[(8-1)]\">\n$8\n<\/$tag>\n<$tag $tag=\"$t[(9-1)]\">\n$9\n<\/$tag>\n/;}
 
+				
 				$strCurrentTokens =~ s/<$tag[^>]*>\s*<\/$tag>\s*//; #remove leading or trailing empty element
 				if ($fix_theta){
 					$strCurrentTokens =~ s/ⲧ(\n<\/$tag>\n<$tag $tag="([^"]+)">\n)ϩ/ⲑ$1/;
 				}				
 
-				$strCurrentTokens =~ s/\[((<[^>]+>)+)/$1\[/g;  #move leading bracket inside token
-				$strCurrentTokens =~ s/((<[^>]+>)+\n*)\]/\]$1/g;  #move trailing bracket inside token
+				$strCurrentTokens =~ s/[\[@]((<[^>]+>)+)\n/$1\n\[/g;  #move leading bracket inside token
+				$strCurrentTokens =~ s/((<[^>]+>)+\n*)[\]%]/\]$1/g;  #move trailing bracket inside token
 				$strCurrentTokens = &restore_caps($strCurrentTokens);
 			}
-			else { 
+			else {
+			
 				if  ($count==0) {
 					$flat_word = $word;
 					$flat_word =~ s/[\n\|]+//g;
@@ -984,5 +996,8 @@ sub align{
 				}
 			}
 			$strCurrentTokens =~ s/\n+/\n/g;
+			$strCurrentTokens =~ s/@/[/;
+			$strCurrentTokens =~ s/%/]/;
+						
 			$strCurrentTokens;
 }
