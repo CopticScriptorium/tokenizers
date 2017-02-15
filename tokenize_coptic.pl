@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# tokenize_coptic.pl Version 4.2.0
+# tokenize_coptic.pl Version 4.2.1
 
 # this assumes a UTF-8 file with untokenized 'word forms' separated by spaces or underscores
 # three files must be present in the tokenizer directory or specified via options: copt_lex.tab, segmentation_table.tab and morph_table.tab
@@ -882,7 +882,7 @@ sub orderSGML{
 }
 
 sub flush_tags{
-	@priorities = ('TEI','head','body','doc','chapter','verse','pb','cb','line','norm_group','norm','gap','hi','morph','m');
+	@priorities = ('TEI','head','body','doc','chapter','verse','pb','cb','line','lb','note','norm_group','norm','gap','hi','morph','m');
 	my %tags =  %{$_[0]};
 	$close = $_[1];
 	$blockmode = $_[2];
