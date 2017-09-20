@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# tokenize_coptic.pl Version 4.2.1
+# tokenize_coptic.pl Version 4.2.4
 
 # this assumes a UTF-8 file with untokenized 'word forms' separated by spaces or underscores
 # three files must be present in the tokenizer directory or specified via options: copt_lex.tab, segmentation_table.tab and morph_table.tab
@@ -73,8 +73,8 @@ if (!($morphfile = $opts{m}))
 
 ### BUILD LEXICON ###
 #build function word lists
-$pprep = "ⲁϫⲛⲧ|ⲉϩⲣⲁ|ⲉϩⲣⲁⲓⲉϫⲱ|ⲉϫⲛⲧⲉ|ⲉϫⲱ|ⲉⲣⲁⲧ|ⲉⲣⲁⲧⲟⲩ|ⲉⲣⲟ|ⲉⲣⲱ|ⲉⲧⲃⲏⲏⲧ|ⲉⲧⲟⲟⲧ|ϩⲁⲉⲓⲁⲧ|ϩⲁϩⲧⲏ|ϩⲁⲣⲁⲧ|ϩⲁⲣⲓϩⲁⲣⲟ|ϩⲁⲣⲟ|ϩⲁⲣⲱ|ϩⲁⲧⲟⲟⲧ|ϩⲓϫⲱ|ϩⲓⲣⲱ|ϩⲓⲧⲉ|ϩⲓⲧⲟⲟⲧ|ϩⲓⲧⲟⲩⲱ|ϩⲓⲱ|ϩⲓⲱⲱ|ⲕⲁⲧⲁⲣⲟ|ⲕⲁⲧⲁⲣⲱ|ⲙⲙⲟ|ⲙⲙⲱ|ⲙⲛⲛⲥⲱ|ⲙⲡⲁⲙⲧⲟⲉⲃⲟⲗ|ⲛⲏⲧⲛ|ⲛⲁ|ⲛϩⲏⲧ|ⲛⲙⲙⲏ|ⲛⲙⲙⲁ|ⲛⲥⲁⲃⲗⲗⲁ|ⲛⲥⲱ|ⲛⲧⲟⲟⲧ|ⲟⲩⲃⲏ|ϣⲁⲣⲟ|ϣⲁⲣⲱ|ⲛⲏ|ⲛⲛⲁϩⲣⲁ|ⲟⲩⲧⲱ|ⲛⲛⲁϩⲣⲏ|ϩⲁⲧⲏ|ⲉⲧⲃⲏⲏ|ⲛⲣⲁⲧ|ⲉⲣⲁ|ⲛⲁϩⲣⲁ|ⲛϩⲏ|ϩⲓⲧⲟⲟ|ⲕⲁⲧⲁ|ⲙⲉⲭⲣⲓ|ⲡⲁⲣⲁ|ⲉⲧⲃⲉ|ⲛⲧⲉ|ⲙⲛⲛⲥⲱ|ⲛⲁϩⲣⲉ?[ⲁⲙⲛ]";
-$nprep = "ⲉ|ⲛ|ⲙ|ⲉⲧⲃⲉ|ϣⲁ|ⲛⲥⲁ|ⲕⲁⲧⲁ|ⲙⲛ|ϩⲓ|ⲁϫⲛ|ⲛⲧⲉ|ϩⲁⲧⲛ|ϩⲁⲧⲙ|ϩⲓⲣⲙ|ϩⲓⲣⲛ|ⲉⲣⲁⲧ|ϩⲛ|ϩⲙ|ϩⲓⲧⲛ|ϩⲓⲧⲙ|ϩⲓϫⲛ|ϩⲓϫⲙ|ϩⲁ|ⲙⲉⲭⲣⲓ|ⲡⲁⲣⲁ|ⲛⲁ|ⲛⲧⲉ|ⲛ?ⲛⲁϩⲣⲉ?[ⲙⲛ]|ⲉϫ[ⲛⲙ]";
+$pprep = "ⲁϫⲛⲧ|ⲉϩⲣⲁ|ⲉϩⲣⲁⲓⲉϫⲱ|ⲉϫⲛⲧⲉ|ⲉϫⲱ|ⲉⲣⲁⲧ|ⲉⲣⲁⲧⲟⲩ|ⲉⲣⲟ|ⲉⲣⲱ|ⲉⲧⲃⲏⲏⲧ|ⲉⲧⲟⲟⲧ|ϩⲁⲉⲓⲁⲧ|ϩⲁϩⲧⲏ|ϩⲁⲣⲁⲧ|ϩⲁⲣⲓϩⲁⲣⲟ|ϩⲁⲣⲟ|ϩⲁⲣⲱ|ϩⲁⲧⲟⲟⲧ|ϩⲓϫⲱ|ϩⲓⲣⲱ|ϩⲓⲧⲉ|ϩⲓⲧⲟⲟⲧ|ϩⲓⲧⲟⲩⲱ|ϩⲓⲱ|ϩⲓⲱⲱ|ⲕⲁⲧⲁⲣⲟ|ⲕⲁⲧⲁⲣⲱ|ⲙⲙⲟ|ⲙⲙⲱ|ⲙⲛⲛⲥⲱ|ⲙⲡⲁⲙⲧⲟⲉⲃⲟⲗ|ⲛⲏⲧⲛ|ⲛⲁ|ⲛϩⲏⲧ|ⲛⲙⲙⲏ|ⲛⲙⲙⲁ|ⲛⲥⲁⲃⲗⲗⲁ|ⲛⲥⲱ|ⲛⲧⲟⲟⲧ|ⲟⲩⲃⲏ|ϣⲁⲣⲟ|ϣⲁⲣⲱ|ⲛⲏ|ⲛⲛⲁϩⲣⲁ|ⲟⲩⲧⲱ|ⲛⲛⲁϩⲣⲏ|ϩⲁⲧⲏ|ⲉⲧⲃⲏⲏ|ⲛⲣⲁⲧ|ⲉⲣⲁ|ⲛⲁϩⲣⲁ|ⲛⲃⲗⲁ|ⲛϩⲏ|ϩⲓⲧⲟⲟ|ⲕⲁⲧⲁ|ⲙⲉⲭⲣⲓ|ⲡⲁⲣⲁ|ⲉⲧⲃⲉ|ⲛⲧⲉ|ⲙⲛⲛⲥⲱ|ⲛⲁϩⲣⲉ?[ⲁⲙⲛ]";
+$nprep = "ⲉ|ⲛ|ⲙ|ⲉⲧⲃⲉ|ϣⲁ|ⲛⲥⲁ|ⲕⲁⲧⲁ|ⲙⲛ|ϩⲓ|ⲁϫⲛ|ⲛⲧⲉ|ϩⲁⲧⲛ|ϩⲁⲧⲙ|ϩⲓⲣⲙ|ϩⲓⲣⲛ|ⲉⲣⲁⲧ|ϩⲛ|ϩⲙ|ϩⲓⲧⲛ|ϩⲓⲧⲙ|ϩⲓϫⲛ|ϩⲓϫⲙ|ϩⲁ|ⲙⲉⲭⲣⲓ|ⲡⲁⲣⲁ|ⲛⲃⲗ|ⲛⲁ|ⲛⲧⲉ|ⲛ?ⲛⲁϩⲣⲉ?[ⲙⲛ]|ⲉϫ[ⲛⲙ]";
 $indprep = "ⲉⲧⲃⲉ|ϩⲛ|ϩⲙ";
 $ppers = "ⲓ|ⲕ|ϥ|ⲥ|ⲛ|ⲧⲉⲧⲛ|(?<=ⲙⲡ)ⲉⲧⲛ|(?<=ϣⲁⲛⲧ)ⲉⲧⲛ|(?<=ⲧⲣⲉ)ⲧⲛ|ⲟ?ⲩ|(?<=ⲛ)ⲅ|(?<=^ⲛ)ⲥⲉ";
 $ppero = "ⲓ|ⲕ|ϥ|ⲥ|ⲛ|ⲧⲛ|ⲧⲏⲩⲧⲛ|ⲟ?ⲩ|(?<=[ⲉⲟ]ⲟⲩ)ⲧ";
@@ -220,12 +220,9 @@ while (<FILE>) {
 			#bound group ends, flush tags and output resegmented tokens
 				#search for morphemes to add
 
-			$strCurrentTokens = &align($strCurrentTokens,$strTokenized,"norm");
+			$strCurrentTokens = &align($strCurrentTokens,$strTokenized,"norm",$trust_tokenization);
 
 			@norms =  ( $strCurrentTokens =~ /norm=\"([^\"]+)\"/g );
-			if ($trust_tokenization == 1){
-				$strCurrentTokens =~ s/-//g; # Remove existing morphological analysis if present
-			}
 			$strMorphed = "";
 			foreach $norm (@norms){
 				$analysis = &morph_analyze($norm);
@@ -237,7 +234,7 @@ while (<FILE>) {
 			$strMorphed =~ s/^\|//;
 			$strMorphed =~ s/\|$//;
 
-			$strCurrentTokens = &align($strCurrentTokens,$strMorphed,"morph");
+			$strCurrentTokens = &align($strCurrentTokens,$strMorphed,"morph",$trust_tokenization);
 			
 			if ($pipes == 1)
 			{
@@ -480,13 +477,13 @@ while (<FILE>) {
 			elsif ($strWord =~ /^(ⲁⲣ)($verblist)($nounlist)$/o)  {$strWord = $1 . "|" . $2 . "|" . $3 ;}
 			elsif ($strWord =~ /^(ⲁⲣ)($verblist)($art|$ppos)($nounlist)$/o)  {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4;}
 			#proper name subject
-			elsif ($tri_  && $strWord =~ /^($trinbase)($namelist)($verblist)$/o)  {$strWord = $1 . "|" . $2 . "|" . $3;}
-			elsif ($_f && $tri_  && $strWord =~ /^($trinbase)($namelist)($verblist)($ppero)$/o)  {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4;}
-			elsif ($tri_  && $strWord =~ /^($trinbase)($namelist)($verblist)($nounlist)$/o)  {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4 ;}
+			#elsif ($tri_  && $strWord =~ /^($trinbase)($namelist)($verblist)$/o)  {$strWord = $1 . "|" . $2 . "|" . $3;}
+			#elsif ($_f && $tri_  && $strWord =~ /^($trinbase)($namelist)($verblist)($ppero)$/o)  {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4;}
+			#elsif ($tri_  && $strWord =~ /^($trinbase)($namelist)($verblist)($nounlist)$/o)  {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4 ;}
 			#prenominal
-			elsif ($tri_  && $strWord =~ /^($trinbase)($art|$ppos)($nounlist)($verblist)$/o)  {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4;}
-			elsif ($_f && $tri_  && $strWord =~ /^($trinbase)($art|$ppos)($nounlist)($verblist)($ppero)$/o)  {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4 ."|" . $5;}
-			elsif ($tri_  && $strWord =~ /^($trinbase)($art|$ppos)($nounlist)($verblist)($nounlist)$/o)  {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4 ."|" . $5;}
+			#elsif ($tri_  && $strWord =~ /^($trinbase)($art|$ppos)($nounlist)($verblist)$/o)  {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4;}
+			#elsif ($_f && $tri_  && $strWord =~ /^($trinbase)($art|$ppos)($nounlist)($verblist)($ppero)$/o)  {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4 ."|" . $5;}
+			#elsif ($tri_  && $strWord =~ /^($trinbase)($art|$ppos)($nounlist)($verblist)($nounlist)$/o)  {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4 ."|" . $5;}
 			#proper name subject separate bound group
 			elsif ($tri_  && $strWord =~ /^($trinbase)($namelist)$/o)  {$strWord = $1 . "|" . $2;}
 			#prenominal separate bound group
@@ -504,13 +501,13 @@ while (<FILE>) {
 			elsif ($je_ && $strWord =~ /^(ϫⲉ)(ⲁⲣ)($verblist)($nounlist)$/o)  {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4;}
 			elsif ($je_ && $strWord =~ /^(ϫⲉ)(ⲁⲣ)($verblist)($art|$ppos)($nounlist)$/o)  {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5;}
 			#proper name subject
-			elsif ($je_ && $strWord =~ /^(ϫⲉ)($trinbase)($namelist)($verblist)$/)   {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4;}
-			elsif ($je_ && $_f && $strWord =~ /^(ϫⲉ)($trinbase)($namelist)($verblist)($ppero)$/o)  {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4 ."|" . $5;}
-			elsif ($je_ && $strWord =~ /^(ϫⲉ)($trinbase)($namelist)($verblist)($nounlist)$/o)  {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4 ."|" . $5;}
+			#elsif ($je_ && $strWord =~ /^(ϫⲉ)($trinbase)($namelist)($verblist)$/)   {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4;}
+			#elsif ($je_ && $_f && $strWord =~ /^(ϫⲉ)($trinbase)($namelist)($verblist)($ppero)$/o)  {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4 ."|" . $5;}
+			#elsif ($je_ && $strWord =~ /^(ϫⲉ)($trinbase)($namelist)($verblist)($nounlist)$/o)  {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4 ."|" . $5;}
 			#prenominal
-			elsif ($je_ && $strWord =~ /^(ϫⲉ)($trinbase)($art|$ppos)($nounlist)($verblist)$/o)  {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4;}
-			elsif ($je_ && $_f && $strWord =~ /^(ϫⲉ)($trinbase)($art|$ppos)($nounlist)($verblist)($ppero)$/o)  {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4 ."|" . $5 . "|". $6;}
-			elsif ($je_ && $strWord =~ /^(ϫⲉ)($trinbase)($art|$ppos)($nounlist)($verblist)($nounlist)$/o)  {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4 ."|" . $5 . "|". $6;}
+			#elsif ($je_ && $strWord =~ /^(ϫⲉ)($trinbase)($art|$ppos)($nounlist)($verblist)$/o)  {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4;}
+			#elsif ($je_ && $_f && $strWord =~ /^(ϫⲉ)($trinbase)($art|$ppos)($nounlist)($verblist)($ppero)$/o)  {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4 ."|" . $5 . "|". $6;}
+			#elsif ($je_ && $strWord =~ /^(ϫⲉ)($trinbase)($art|$ppos)($nounlist)($verblist)($nounlist)$/o)  {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4 ."|" . $5 . "|". $6;}
 			#proper name subject separate bound group
 			elsif ($je_ && $strWord =~ /^(ϫⲉ)($trinbase)($namelist)$/o)  {$strWord = $1 . "|" . $2 . "|" . $3;}
 			#prenominal separate bound group
@@ -638,11 +635,11 @@ while (<FILE>) {
 			elsif ($_f && $strWord =~ /^($art)(ⲉⲛⲧ)(ⲁⲣ)($verblist)($ppero)$/o) {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5;} #nominalized
 			#prenominal
 			elsif ($strWord =~ /^(ⲉ?ⲛⲧ|ⲉ)($triprobase)($art|$ppos)($nounlist)$/)   {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4;}
-			elsif ($strWord =~ /^(ⲉ?ⲛⲧ|ⲉ)($triprobase)($art|$ppos)($nounlist)($verblist)$/)   {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4 ."|" . $5;}
-			elsif ($_f && $strWord =~ /^(ⲉ?ⲛⲧ|ⲉ)($triprobase)($art|$ppos)($nounlist)($verblist)($ppero)$/o)  {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5. "|".$6;}
-			elsif ($strWord =~ /^(ⲉ?ⲛⲧ|ⲉ)($triprobase)($art|$ppos)($nounlist)($verblist)($nounlist)$/o)  {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5. "|".$6;}
+			#elsif ($strWord =~ /^(ⲉ?ⲛⲧ|ⲉ)($triprobase)($art|$ppos)($nounlist)($verblist)$/)   {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4 ."|" . $5;}
+			#elsif ($_f && $strWord =~ /^(ⲉ?ⲛⲧ|ⲉ)($triprobase)($art|$ppos)($nounlist)($verblist)($ppero)$/o)  {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5. "|".$6;}
+			#elsif ($strWord =~ /^(ⲉ?ⲛⲧ|ⲉ)($triprobase)($art|$ppos)($nounlist)($verblist)($nounlist)$/o)  {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5. "|".$6;}
 			elsif ($strWord =~ /^($art)(ⲉⲛⲧ)(ⲁ)($art|$ppos)($nounlist)$/o) {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5;}  #nominalized
-			elsif ($strWord =~ /^($art)(ⲉⲛⲧ)(ⲁ)($art|$ppos)($nounlist)($verblist)$/o) {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5. "|" . $6;}  #nominalized
+			#elsif ($strWord =~ /^($art)(ⲉⲛⲧ)(ⲁ)($art|$ppos)($nounlist)($verblist)$/o) {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5. "|" . $6;}  #nominalized
 			#proper name subject separate bound group
 			elsif ($strWord =~ /^(ⲉ?ⲛⲧ|ⲉ)(ⲁ|ⲛⲛⲉ)($namelist)$/o)  {$strWord = $1 . "|" . $2 . "|" . $3;}
 			#prenominal separate bound group
@@ -658,11 +655,11 @@ while (<FILE>) {
 			elsif ($_f && $strWord =~ /^(ϫ[ⲉⲓ])($art)(ⲉⲛⲧ)(ⲁⲣ)($verblist)($ppero)$/o) {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5 . "|" . $6;} #nominalized
 			#prenominal
 			elsif ($strWord =~ /^(ϫ[ⲉⲓ])(ⲉ?ⲛⲧ|ⲉ)($triprobase)($art|$ppos)($nounlist)$/)   {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4 ."|" . $5;}
-			elsif ($strWord =~ /^(ϫ[ⲉⲓ])(ⲉ?ⲛⲧ|ⲉ)($triprobase)($art|$ppos)($nounlist)($verblist)$/)   {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5. "|".$6;}
-			elsif ($_f && $strWord =~ /^(ϫ[ⲉⲓ])(ⲉ?ⲛⲧ|ⲉ)($triprobase)($art|$ppos)($nounlist)($verblist)($ppero)$/)  {$strWord =  $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5 . "|" . $6 . "|". $7;}
-			elsif ($strWord =~ /^(ϫ[ⲉⲓ])(ⲉ?ⲛⲧ|ⲉ)($triprobase)($art|$ppos)($nounlist)($verblist)($nounlist)$/)  {$strWord =  $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5 . "|" . $6 . "|". $7;}
+			#elsif ($strWord =~ /^(ϫ[ⲉⲓ])(ⲉ?ⲛⲧ|ⲉ)($triprobase)($art|$ppos)($nounlist)($verblist)$/)   {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5. "|".$6;}
+			#elsif ($_f && $strWord =~ /^(ϫ[ⲉⲓ])(ⲉ?ⲛⲧ|ⲉ)($triprobase)($art|$ppos)($nounlist)($verblist)($ppero)$/)  {$strWord =  $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5 . "|" . $6 . "|". $7;}
+			#elsif ($strWord =~ /^(ϫ[ⲉⲓ])(ⲉ?ⲛⲧ|ⲉ)($triprobase)($art|$ppos)($nounlist)($verblist)($nounlist)$/)  {$strWord =  $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5 . "|" . $6 . "|". $7;}
 			elsif ($strWord =~ /^(ϫ[ⲉⲓ])($art)(ⲉⲛⲧ)(ⲁ)($art|$ppos)($nounlist)$/o) {$strWord = $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5 . "|" . $6;}  #nominalized
-			elsif ($strWord =~ /^(ϫ[ⲉⲓ])($art)(ⲉⲛⲧ)(ⲁ)($art|$ppos)($nounlist)($verblist)$/) {$strWord =  $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5 . "|" . $6 . "|". $7;}  #nominalized
+			#elsif ($strWord =~ /^(ϫ[ⲉⲓ])($art)(ⲉⲛⲧ)(ⲁ)($art|$ppos)($nounlist)($verblist)$/) {$strWord =  $1 . "|" . $2 . "|" . $3 . "|" . $4. "|" . $5 . "|" . $6 . "|". $7;}  #nominalized
 			#proper name subject separate bound group
 			elsif ($strWord =~ /^(ϫ[ⲉⲓ])(ⲉ?ⲛⲧ|ⲉ)($triprobase)($namelist)$/o)  {$strWord = $1 . "|" . $2 . "|" . $3. "|" . $4;}
 			#prenominal separate bound group
@@ -935,6 +932,12 @@ sub align{
 			$strCurrentTokens = $_[0];
 			$strTokenized = $_[1];
 			$tag = $_[2];
+			$trust_tokenization = $_[3];
+
+			if ($tag eq "morph" && $trust_tokenization > 0){  # hyphens literally mean morphological segmentation (trust tokenization mode)
+				$strCurrentTokens =~ s/(norm="[^"-]*)-([^"-]*")/$1$2/; # remove hyphens marking morph segmentations from the norm tag
+				$strCurrentTokens =~ s/([^\n<>]+)-/$1/; # remove hyphens inside token literal
+			}
 			
 			$strPattern = ($strTokenized);
 			@t = split(/\|/, $strTokenized);
@@ -942,7 +945,13 @@ sub align{
 			$strPattern =~ s/([\[\]\(\)])/\\$1/g;
 			$strPattern =~ s/([^\\\|\n\r])/$1#/g;
 			$strPattern =~ s/\|/\)\(/g;
-			$strPattern =~ s'#'(?:(?:[@%\r\\ṇ̄︦︤︥̀̂`⳿̣̂̅̈︤︦̇]|<[^>]+>|̣|~)*)?'g; #allow intervening tags, linebreaks, capital letter escapes with tilde, square bracket escapes and Coptic diacritics
+			if ($trust_tokenization > 0){
+				$strPattern =~ s'#'(?:(?:[@%\r\\ṇ̄︦︤︥̀̂`⳿̣̂̅̈︤︦̇]|<[^>]+>|̣|~)*)?'g; #allow intervening tags, linebreaks, capital letter escapes with tilde, square bracket escapes and Coptic diacritics
+			}
+			else{
+				$strCurrentTokens =~ s/(norm="[^"-]+)-([^"-]+")/$1$2/; # remove intervening hyphens as non-normal
+				$strPattern =~ s'#'(?:(?:[@%\r\\ṇ̄︦︤︥̀̂`⳿̣̂̅̈︤︦̇-]|<[^>]+>|̣|~)*)?'g; #also allow hyphens - they are diacritics, not morphological segmentation
+			}
 			$strPattern = join '','(?<!\\")(' , $strPattern , ')'; #negative lookbehind prevents matching tokens within a quoted attribute in an SGML tag
 			$strPattern =~ s/\n*$//; #strip pattern 
 			$strPattern =~ s/^\n*//;
@@ -969,7 +978,7 @@ sub align{
 			if ($tag eq "morph" && $strCurrentTokens =~ m/(Ⲁ|Ⲃ|Ⲅ|Ⲇ|Ⲉ|Ⲍ|Ⲏ|Ⲑ|Ⲓ|Ⲕ|Ⲗ|Ⲙ|Ⲛ|Ⲝ|Ⲟ|Ⲡ|Ⲣ|Ⲥ|Ⲧ|Ⲫ|Ⲭ|Ⲯ|Ⲱ|Ϭ|Ϣ|Ϩ|Ϥ|Ϫ|Ϯ)/){
 				$strCurrentTokens = &encode_caps($strCurrentTokens);
 			}
-			
+
 			if ($strCurrentTokens =~ /$strPattern/){
 
 				if ($count==0) {$t[0]=$strTokenized; $strCurrentTokens =~ s/$strPattern/<$tag $tag=\"$t[(1-1)]\">\n$1\n<\/$tag>\n/;}
